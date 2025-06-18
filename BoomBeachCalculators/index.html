@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boom Beach Calculators</title>
+  <style>
+    body{font-family:Arial, sans-serif;padding:1rem;max-width:900px;margin:auto;}
+    h1{text-align:center;}
+    .grid{display:flex;flex-wrap:nowrap;gap:0.75rem;}
+    .resource{flex:1 1 200px;border:1px solid #ccc;padding:0.75rem;border-radius:6px;}
+    .icon{width:23px;height:20px;vertical-align:middle;margin-right:4px;}
+    label{display:block;font-weight:600;margin-top:0.25rem;}
+    input{width:100%;padding:0.4rem;margin-top:0.15rem;box-sizing:border-box;}
+    button{display:block;margin:1rem auto;padding:0.6rem 1.2rem;font-size:1rem;border:none;border-radius:4px;cursor:pointer;}
+    #output{margin-top:1.5rem;border-top:2px solid #333;padding-top:1.25rem;}
+    /* --- tab bar --- */
+    .tabs{display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:2px solid #333;}
+    .tab{background:none;border:none;padding:0.5rem 0.75rem;font-weight:600;cursor:pointer;border-bottom:4px solid transparent;}
+    .tab.active{border-color:#333;}
+    .tab:hover{background:#f2f2f2;}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+    @media(max-width:600px){
+      .resource{flex:1 1 100%;}
+      .grid{flex-wrap:wrap;}
+    }
+  </style>
+</head>
+<body>
+  <h1>Boom Beach Calculators</h1>
+
+  <!-- tab navigation -->
+  <div class="tabs">
+    <button class="tab active" data-target="ec">Evil Coins Calculator</button>
+    <button class="tab" data-target="diamonds">Time Skip Calculator</button>
+    <button class="tab" data-target="future">Coming soon...</button>
+  </div>
+
+  <section id="ec" class="tab-content active">
+    <div class="grid">
+      <div class="resource">
+        <label for="goldCur"><img class="icon" src="images/gold.webp" alt="Gold">Gold&nbsp;Current</label><input type="number" id="goldCur" placeholder="e.g. 120000">
+        <label for="goldReq">Gold Required</label><input type="number" id="goldReq" placeholder="e.g. 500000">
+      </div>
+      <div class="resource">
+        <label for="woodCur"><img class="icon" src="images/wood.webp" alt="Wood">Wood&nbsp;Current</label><input type="number" id="woodCur">
+        <label for="woodReq">Wood Required</label><input type="number" id="woodReq">
+      </div>
+      <div class="resource">
+        <label for="stoneCur"><img class="icon" src="images/stone.webp" alt="Stone">Stone&nbsp;Current</label><input type="number" id="stoneCur">
+        <label for="stoneReq">Stone Required</label><input type="number" id="stoneReq">
+      </div>
+      <div class="resource">
+        <label for="ironCur"><img class="icon" src="images/iron.webp" alt="Iron">Iron&nbsp;Current</label><input type="number" id="ironCur">
+        <label for="ironReq">Iron Required</label><input type="number" id="ironReq">
+      </div>
+    </div>
+
+    <button onclick="computeEC()">Compute EC</button>
+    <div id="outputEC"></div>
+  </section>
+
+  <section id="diamonds" class="tab-content">
+    <div class="grid">
+      <div class="resource" style="flex:1 1 250px;">
+        <label for="timeHours"><img class="icon" src="images/Diamond.webp" alt="Diamonds">Time Remaining (hours)</label>
+        <input type="number" id="timeHours" placeholder="e.g. 20">
+      </div>
+    </div>
+
+    <button onclick="computeDiamonds()">Compute Diamonds</button>
+
+    <div id="outputDiamonds"></div>
+  </section>
+
+  <section id="future" class="tab-content">
+    <div class="grid">
+      <p>Coming soon...</p>
+    </div>
+
+    <button onclick="dummy()">Dummy button</button>
+
+    <div id="outputDummy"></div>
+  </section>
+
+
+    <script>
+      /* Utility for ceiling integer division */
+      const ceilDiv = (a,b) => Math.ceil(a/b);
+      
+      /* tab handling */
+      document.querySelectorAll('.tab').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          // activate button
+          document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          // show corresponding section
+          const target = btn.dataset.target;
+          document.querySelectorAll('.tab-content').forEach(sec=>sec.classList.remove('active'));
+          document.getElementById(target).classList.add('active');
+        });
+      });
+
+      /* Exchange rates and pack sizes for EC*/
+      const rates = {
+        gold:  {smallCost:23, smallSize:50000,  bigCost:460,  bigSize:1000000},
+        wood:  {smallCost:26, smallSize:50000,  bigCost:520,  bigSize:1000000},
+        stone: {smallCost:36, smallSize:50000,  bigCost:720,  bigSize:1000000},
+        iron:  {smallCost:60, smallSize:50000,  bigCost:1200, bigSize:1000000}
+      };
+
+      /** Evil Coins calculator */
+      function computeEC(){
+        const names = ['gold','wood','stone','iron'];
+        let html = '<h2>Results</h2>';
+        let totalEC = 0;
+
+        names.forEach(name=>{
+          const cur = Number(document.getElementById(name+'Cur').value) || 0;
+          const req = Number(document.getElementById(name+'Req').value) || 0;
+          const deficit = Math.max(0, req - cur);
+
+          if(deficit === 0){
+            html += `<p><strong>${name}</strong>: no purchase needed</p>`;
+            return;
+          }
+
+          const r = rates[name];
+          const rounded = ceilDiv(deficit, r.smallSize) * r.smallSize;         // round up to 50 k increment
+          const bigPacks = Math.floor(rounded / r.bigSize);
+          const remainder = rounded % r.bigSize;
+          const smallPacks = remainder / r.smallSize;
+          const cost = bigPacks * r.bigCost + smallPacks * r.smallCost;
+
+          totalEC += cost;
+
+          html += `<p><strong>${name}</strong>: need ${rounded.toLocaleString()} (${deficit.toLocaleString()} deficit)<br>
+                   → ${bigPacks} × ${(r.bigSize/1000).toLocaleString()}k + ${smallPacks} × 50k packs = <em>${cost} EC</em></p>`;
+        });
+
+        html += `<h3>Total EC required: ${totalEC.toLocaleString()}</h3>`;
+        document.getElementById('outputEC').innerHTML = html;
+      }
+
+      /* Diamond time‑to‑cost calculator */
+      function computeDiamonds(){
+        const T = Number(document.getElementById('timeHours').value) || 0;
+        const out = document.getElementById('outputDiamonds');
+        if(T <= 0){
+          out.innerHTML = '<p>Please enter a positive number of hours.</p>';
+          return;
+        }
+        const D = 1.25 * 20.147 * Math.pow(T, 0.7513);
+        const rate = D / T;
+        out.innerHTML =
+          `<h2>Results</h2>
+           <p>Cost to finish now: <strong>${D.toFixed(2)}</strong> diamonds.</p>
+           <p>Cost efficiency: <strong>${rate.toFixed(2)}</strong> diamonds per hour skipped.</p>`;
+      }
+
+      /* Dummy calculator */
+      function dummy(){
+        const out = document.getElementById('outputDummy');
+        out.innerHTML =
+          `<h2>Results</h2>
+           Hello World`;
+      }
+    </script>
+    <footer style="margin-top:2rem;text-align:center;font-size:0.85rem;color:#555;">
+        Updated for 19&nbsp;Jun&nbsp;2025. Results may not be 100% accurate.
+    </footer>
+</body>
+</html>
