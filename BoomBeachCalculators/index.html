@@ -15,7 +15,7 @@
     button{display:block;margin:1rem auto;padding:0.6rem 1.2rem;font-size:1rem;border:none;border-radius:4px;cursor:pointer;}
     #output{margin-top:1.5rem;border-top:2px solid #333;padding-top:1.25rem;}
     /* --- tab bar --- */
-    .tabs{display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:2px solid #333;}
+    .tabs{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;border-bottom:2px solid #333;}
     .tab{background:none;border:none;padding:0.5rem 0.75rem;font-weight:600;cursor:pointer;border-bottom:4px solid transparent;}
     .tab.active{border-color:#333;}
     .tab:hover{background:#f2f2f2;}
@@ -32,8 +32,10 @@
 
   <!-- tab navigation -->
   <div class="tabs">
-    <button class="tab active" data-target="ec">Evil Coins Calculator</button>
-    <button class="tab" data-target="diamonds">Time Skip Calculator</button>
+    <button class="tab active" data-target="ec">Evil Coins Resources</button>
+    <button class="tab" data-target="cycle">Cycle of Evil Loot</button>
+    <button class="tab" data-target="timers">Time Skip</button>
+    <button class="tab" data-target="gunboat">Gunboat Energy</button>
     <button class="tab" data-target="future">Coming soon...</button>
   </div>
 
@@ -41,37 +43,136 @@
     <div class="grid">
       <div class="resource">
         <label for="goldCur"><img class="icon" src="images/Gold.webp" alt="Gold">Gold&nbsp;Current</label><input type="number" id="goldCur" placeholder="e.g. 120000">
-        <label for="goldReq">Gold Required</label><input type="number" id="goldReq" placeholder="e.g. 500000">
+        <label for="goldReq"><img class="icon" src="images/Gold.webp" alt="Gold">Gold Required</label><input type="number" id="goldReq" placeholder="e.g. 500000">
       </div>
       <div class="resource">
         <label for="woodCur"><img class="icon" src="images/Wood.webp" alt="Wood">Wood&nbsp;Current</label><input type="number" id="woodCur">
-        <label for="woodReq">Wood Required</label><input type="number" id="woodReq">
+        <label for="woodReq"><img class="icon" src="images/Wood.webp" alt="Wood">Wood Required</label><input type="number" id="woodReq">
       </div>
       <div class="resource">
         <label for="stoneCur"><img class="icon" src="images/Stone.webp" alt="Stone">Stone&nbsp;Current</label><input type="number" id="stoneCur">
-        <label for="stoneReq">Stone Required</label><input type="number" id="stoneReq">
+        <label for="stoneReq"><img class="icon" src="images/Stone.webp" alt="Stone">Stone Required</label><input type="number" id="stoneReq">
       </div>
       <div class="resource">
         <label for="ironCur"><img class="icon" src="images/Iron.webp" alt="Iron">Iron&nbsp;Current</label><input type="number" id="ironCur">
-        <label for="ironReq">Iron Required</label><input type="number" id="ironReq">
+        <label for="ironReq"><img class="icon" src="images/Iron.webp" alt="Iron">Iron Required</label><input type="number" id="ironReq">
       </div>
     </div>
 
-    <button onclick="computeEC()">Compute EC</button>
+    <button onclick="computeEC()">Compute Evil Coins</button>
     <div id="outputEC"></div>
   </section>
 
-  <section id="diamonds" class="tab-content">
+  <section id="cycle" class="tab-content">
+    <div class="grid">
+      <div class="resource">
+        <label for="cycleType">Event</label>
+        <select id="cycleType">
+          <option value="hammerman">Hammerman Strikes Back</option>
+          <option value="drt_tropical">Dr. T Tropical</option>
+          <option value="drt_volcano">Dr. T Volcano</option>
+          <option value="war_factory">War Factory (Gearheart)</option>
+          <option value="imitation_game">Imitation Game</option>
+        </select>
+      </div>
+      <div class="resource">
+        <label for="cycleThreat">Starting Threat (1‑26)</label>
+        <input type="number" id="cycleThreat" min="1" max="26" value="1">
+      </div>
+      <div class="resource">
+        <label for="cycleReward">Resource Reward (%)</label>
+        <input type="number" id="cycleReward" min="0" max="100" value="0">
+      </div>
+    </div>
+    <p>Will be updated after sufficient data is available.</p>
+
+    <button onclick="computeCycle()">Compute loot</button>
+
+    <div id="outputCycle"></div>
+  </section>
+
+  <section id="timers" class="tab-content">
     <div class="grid">
       <div class="resource" style="flex:1 1 250px;">
-        <label for="timeHours"><img class="icon" src="images/Diamond.webp" alt="Diamonds">Time Remaining (hours)</label>
+        <label for="timeHours"><img class="icon" src="images/Stopwatch.webp" alt="Time">Time Remaining (hours)</label>
         <input type="number" id="timeHours" placeholder="e.g. 20">
       </div>
     </div>
-
+    <p>This is using old diamond formula.</p>
     <button onclick="computeDiamonds()">Compute Diamonds</button>
 
     <div id="outputDiamonds"></div>
+  </section>
+
+  <section id="gunboat" class="tab-content">
+    <div class="grid">
+      <!-- Row 1: Artillery – Shock -->
+      <div class="resource">
+        <img class="icon" src="images/Artillery_new.webp" alt="artillery">
+        <label for="artilleryCount">Artillery uses</label>
+        <input type="number" id="artilleryCount" min="0" value="0">
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Flare.webp" alt="flare">
+        <label for="flareCount">Flare uses</label>
+        <input type="number" id="flareCount" min="0" value="0">
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Medkit.webp" alt="medkit">
+        <label for="medkitCount">Medkit uses</label>
+        <input type="number" id="medkitCount" min="0" value="0">
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Shock_Bomb.webp" alt="shock">
+        <label for="shockCount">Shock Bomb uses</label>
+        <input type="number" id="shockCount" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Row 2: Barrage – Critters -->
+      <div class="resource">
+        <img class="icon" src="images/Barrage.webp" alt="barrage">
+        <label for="barrageCount">Barrage uses</label>
+        <input type="number" id="barrageCount" min="0" value="0">
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Smoke_Screen.webp" alt="smoke">
+        <label for="smokeCount">Smoke Screen uses</label>
+        <input type="number" id="smokeCount" min="0" value="0">
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Critters.webp" alt="critters">
+        <label for="crittersCount">Critters uses</label>
+        <input type="number" id="crittersCount" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Row 3: Gunboat level & bonus -->
+      <div class="resource">
+        <img class="icon" src="images/GB22.webp" alt="gunboat">
+        <label for="gunboatLevel">Gunboat Level</label>
+        <select id="gunboatLevel">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+          <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+          <option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+          <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option>
+          <option value="25">25</option><option value="26">26</option><option value="27">27</option>
+        </select>
+      </div>
+      <div class="resource">
+        <img class="icon" src="images/Ammo.webp" alt="gbe">
+        <label for="gbeBonus">GBE Bonus (%)</label>
+        <input type="number" id="gbeBonus" min="0" value="0">
+      </div>
+    </div>
+
+    <button onclick="computeGunboat()">Compute GBE</button>
+
+    <div id="outputGunboat"></div>
   </section>
 
   <section id="future" class="tab-content">
@@ -113,7 +214,7 @@
       /** Evil Coins calculator */
       function computeEC(){
         const names = ['gold','wood','stone','iron'];
-        let html = '<h2>Results</h2>';
+        let html = '';
         let totalEC = 0;
 
         names.forEach(name=>{
@@ -122,7 +223,7 @@
           const deficit = Math.max(0, req - cur);
 
           if(deficit === 0){
-            html += `<p><strong>${name}</strong>: no purchase needed</p>`;
+            html += `<p><strong>${name}</strong>: No purchase needed</p>`;
             return;
           }
 
@@ -139,8 +240,17 @@
                    → ${bigPacks} × ${(r.bigSize/1000).toLocaleString()}k + ${smallPacks} × 50k packs = <em>${cost} EC</em></p>`;
         });
 
-        html += `<h3>Total EC required: ${totalEC.toLocaleString()}</h3>`;
+        html += `<h3>Total Evil Coins required: ${totalEC.toLocaleString()}</h3>`;
         document.getElementById('outputEC').innerHTML = html;
+      }
+
+      /* Cycle of Evil */
+      function computeCycle(){
+        const out = document.getElementById('outputCycle');
+        
+
+        out.innerHTML =
+        'WIP';
       }
 
       /* Diamond time‑to‑cost calculator */
@@ -153,13 +263,55 @@
         }
         const D = 1.25 * 20.147 * Math.pow(T, 0.7513);
         const rate = D / T;
+
+        const timeSavers = Math.ceil(T*4);
+
         out.innerHTML =
-          `<h2>Results</h2>
-           <p>Cost to finish now: <strong>${D.toFixed(2)}</strong> diamonds.</p>
-           <p>Cost efficiency: <strong>${rate.toFixed(2)}</strong> diamonds per hour skipped.</p>`;
+          `<p>Cost to finish now: <strong>${D.toFixed(2)}</strong> <img class="icon" src="images/Diamond.webp" alt="Diamonds"></p>
+           <p>Cost efficiency: <strong>${rate.toFixed(2)}</strong> <img class="icon" src="images/Diamond.webp" alt="Diamonds"> per hour skipped</p>
+           <p>Equivalent in Time Savers is <strong>${timeSavers.toFixed(0)}</strong> <img class="icon" src="images/TimeSaver.webp" alt="TimeSaver">`;
       }
 
-      /* Dummy calculator */
+      /* GBE Calculator */
+      function computeGunboat(){
+        const abilities = {
+          artillery:{init:3, inc:2, id:'artilleryCount'},
+          flare:{init:2, inc:1, id:'flareCount'},
+          medkit:{init:6, inc:3, id:'medkitCount'},
+          shock:{init:7, inc:5, id:'shockCount'},
+          barrage:{init:10, inc:6, id:'barrageCount'},
+          smoke:{init:2, inc:1, id:'smokeCount'},
+          critters:{init:8, inc:5, id:'crittersCount'}
+        };
+
+        /* helper: arithmetic‑series sum */
+        const seriesSum = (first, inc, n) => n * ( (2*first) + (n-1)*inc ) / 2;
+
+        let totalUsed = 0;
+        for(const key in abilities){
+          const cnt = Number(document.getElementById(abilities[key].id).value) || 0;
+          totalUsed += seriesSum(abilities[key].init, abilities[key].inc, cnt);
+        }
+
+        /* Gunboat base energy by level */
+        const gbeByLevel = [0,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,51,52,53,54,55,56,57];
+        const lvl = Number(document.getElementById('gunboatLevel').value);
+        let available = gbeByLevel[lvl];
+
+        /* bonus as percentage */
+        const bonusPct = Number(document.getElementById('gbeBonus').value) || 0;
+        available = available * (1 + bonusPct/100);
+
+        const out = document.getElementById('outputGunboat');
+        const suff = available >= totalUsed;
+
+        out.innerHTML =
+          `<p>Total <img class="icon" src="images/Ammo.webp" alt="gbe"> required: <strong>${totalUsed.toFixed(1)}</strong></p>
+           <p><img class="icon" src="images/Ammo.webp" alt="gbe"> available (level ${lvl} + ${bonusPct}%): <strong>${available.toFixed(1)}</strong></p>
+           <p><strong>${suff ? 'Sufficient 👍' : 'Insufficient ⚠️'}</strong></p>`;
+      }
+
+      /* Dummy function */
       function dummy(){
         const out = document.getElementById('outputDummy');
         out.innerHTML =
