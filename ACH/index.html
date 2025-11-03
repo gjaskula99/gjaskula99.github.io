@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ACH Matrix (Analysis of Competing Hypotheses)</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #161a22;
+      --muted: #8b95a7;
+      --text: #e6e9ef;
+      --accent: #4cc9f0;
+      --accent-2: #a1ffce;
+      --danger: #e63946;
+      --border: #242a35;
+      --focus: #94e2ff;
+      --success: #2fbf71;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, var(--bg), #0b0d12 60%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrap { width: 100%; max-width: none; margin: 12px 0 64px; padding: 0 16px 0 16px; box-sizing: border-box; }
+
+    main, body { width: 100%; }
+
+    .table-shell { margin-top: 12px; width: 100%; overflow-x: auto; }
+
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    header h1 { font-size: 1.35rem; margin: 0; letter-spacing: 0.2px; }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .toggle { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+    .toggle input[type="checkbox"] { transform: translateY(1px); width: 18px; height: 18px; cursor: pointer; }
+
+    .hint { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; table-layout: fixed; min-width: max(960px, var(--table-min, 0px)); }
+    thead th { position: sticky; top: 0; background: #131721; z-index: 1; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; vertical-align: middle; font-size: 0.95rem; }
+    thead th { font-weight: 600; color: #cfd6e6; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: none; }
+    tfoot td { border-top: 1px solid var(--border); background: #121621; }
+
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .number { width: 70px; }
+
+    input[type="text"], input[type="number"], textarea {
+      width: 100%; box-sizing: border-box; background: #0e121a; color: var(--text); border: 1px solid #2a3140; border-radius: 8px; padding: 6px 8px; outline: none;
+    }
+    textarea { line-height: 1.35; resize: vertical; min-height: 60px; }
+
+    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+    input:focus, textarea:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(148, 226, 255, 0.15); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: #0f1420; color: var(--text); cursor: pointer; font-size: 0.9rem; user-select: none; }
+    .btn.small { padding: 4px 8px; font-size: 0.85rem; }
+    .btn:hover { border-color: #384054; }
+    .btn[title*="Remove"], .btn.remove { background: #1a0f12; border-color: #3a1b22; }
+    .btn[title*="Remove"]:hover { border-color: #5c2834; }
+    .btn.primary { background: #0f1730; border-color: #24315a; }
+
+    .pill { padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }
+
+    .sum-cell { font-variant-numeric: tabular-nums; font-weight: 600; text-align: center; min-width: 70px; }
+
+    .lowest { background: linear-gradient(0deg, rgba(230,57,70,0.12), rgba(230,57,70,0.12)); outline: 2px solid rgba(230,57,70,0.45); outline-offset: -2px; }
+
+    .accepted { background: linear-gradient(0deg, rgba(47,191,113,0.14), rgba(47,191,113,0.14)); outline: 2px solid rgba(47,191,113,0.55); outline-offset: -2px; font-weight: 700; }
+
+    .rejected { opacity: 0.8; }
+    .rejected td:first-child input[type="text"] { text-decoration: line-through; }
+
+    .th-evidence { position: relative; }
+    .th-evidence .label { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .th-evidence .remove-col { margin-left: 8px; }
+    .th-evidence .evidence-name { width: 150px; max-width: 100%; text-align: center; padding: 4px 6px; }
+    .th-evidence .evidence-comment { width: 210px; max-width: 100%; text-align: left; padding: 6px 8px; font-size: 0.9rem; }
+    .th-evidence .ignore-control, .th-evidence .weight-control { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+    .th-evidence .weight-input { width: 72px; text-align: center; }
+
+    /* Visual treatment for ignored evidence */
+    .th-evidence.ignored { opacity: 0.75; background: rgba(255,255,255,0.02); }
+    .th-evidence.ignored .evidence-name { text-decoration: line-through; }
+    .ignored-cell { opacity: 0.55; }
+
+    .tfoot-controls { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .muted { color: var(--muted); }
+
+    @media (max-width: 720px) { thead .optional-label { display: none; } .number { width: 60px; } .th-evidence .evidence-name { width: 120px; } .th-evidence .evidence-comment { width: 160px; } }
+  </style>
+  <!-- jsPDF is loaded dynamically when exporting (fallback across CDNs) -->
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ACH Matrix <span class="pill">Analysis of Competing Hypotheses</span></h1>
+      <div class="controls">
+        <label class="toggle" title="Highlight hypothesis rows with the lowest total score">
+          <input id="toggleHighlight" type="checkbox" />
+          <span>Highlight lowest score</span>
+        </label>
+        <button id="exportPdfBtn" class="btn" title="Export to PDF">Export PDF</button>
+        <button id="clearBtn" class="btn" title="Clear the entire matrix">Clear</button>
+      </div>
+    </header>
+
+    <div class="hint">Use <em>+ Evidence</em> to add columns and <em>+ Hypothesis</em> to add rows. “Accept” marks a single row in green; “Reject” excludes a row from highlighting and strikes the name. Evidence headers support comments, <em>weights</em>, and an <em>Ignore</em> toggle to exclude from sums.</div>
+
+    <div class="table-shell">
+      <table id="achTable" aria-describedby="matrix of hypotheses and evidences">
+        <thead>
+          <tr id="headerRow">
+            <th class="center">Hypothesis</th>
+            <!-- Evidence headers will be injected here -->
+            <th class="sum-cell center sum-header" title="Weighted sum of scores across non-ignored evidences">Sum</th>
+            <th class="center" title="Mark this hypothesis as accepted">Accept</th>
+            <th class="center" title="Exclude this hypothesis when finding the lowest score">Reject</th>
+            <th class="center">Notes</th>
+            <th class="center" title="Remove row">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="bodyRows"></tbody>
+        <tfoot>
+          <tr>
+            <td id="tfootCell" colspan="7">
+              <div class="tfoot-controls">
+                <div class="muted">Autosaved locally</div>
+                <div>
+                  <button id="addEvidenceBtn" class="btn primary" type="button" title="Add a new evidence column">+ Evidence</button>
+                  <button id="addRowBtn" class="btn primary" type="button" title="Add a new hypothesis row">+ Hypothesis</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <p class="hint">Scoring: enter integer scores (e.g., -2, -1, 0, 1, 2). Empty cells count as 0. Weighted sums use each evidence's weight (default 1.0) and ignore evidence marked as “Ignore”.</p>
+  </div>
+
+  <script>
+    const LS_KEY = 'ach_matrix_v2';
+
+    // Dynamically load jsPDF with CDN fallbacks when needed
+    const JSPDF_URLS = [
+      // Try cdnjs first (v2.5.1 for stability)
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      // Then jsDelivr
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      // Finally unpkg
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve(src);
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureJsPDF() {
+      if (window.jspdf && window.jspdf.jsPDF) return true;
+      for (const url of JSPDF_URLS) {
+        try {
+          await loadScript(url);
+          if (window.jspdf && window.jspdf.jsPDF) return true;
+        } catch (e) {
+          // try next CDN
+        }
+      }
+      return false;
+    }
+
+    // References
+    const headerRow = document.getElementById('headerRow');
+    const bodyRows = document.getElementById('bodyRows');
+    const toggleHighlight = document.getElementById('toggleHighlight');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const addEvidenceBtn = document.getElementById('addEvidenceBtn');
+    const tfootCell = document.getElementById('tfootCell');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const achTable = document.getElementById('achTable');
+
+    function evidenceHeaders() { return Array.from(headerRow.querySelectorAll('th.th-evidence')); }
+    function evidenceCount() { return evidenceHeaders().length; }
+
+    function updateTfootColspan() {
+      const totalCols = headerRow.children.length;
+      tfootCell.colSpan = totalCols;
+    }
+
+    function reindexEvidenceHeaders() {
+      evidenceHeaders().forEach((th, idx) => { th.dataset.index = String(idx); });
+      updateTfootColspan();
+      updateTableMinWidth();
+    }
+
+    function updateTableMinWidth() {
+      // Approximate intrinsic width based on column counts so horizontal scroll appears when needed.
+      // Tunable constants (px):
+      const HYP = 240;      // Hypothesis name column
+      const EVID = 110;     // Each evidence score column
+      const SUM = 70;       // Sum column
+      const ACCEPT = 60;    // Accept checkbox
+      const REJECT = 60;    // Reject checkbox
+      const NOTES = 240;    // Notes textarea
+      const REMOVE = 60;    // Remove button
+      const PADDING = 40;   // Extra breathing room for borders/padding
+      const computed = HYP + (EVID * evidenceCount()) + SUM + ACCEPT + REJECT + NOTES + REMOVE + PADDING;
+      if (achTable && Number.isFinite(computed)) {
+        achTable.style.setProperty('--table-min', computed + 'px');
+      }
+    }
+
+    function autoGrow(el) {
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
+    }
+
+    function wireAutoGrow(el) {
+      if (!el) return;
+      autoGrow(el);
+      el.addEventListener('input', () => { autoGrow(el); saveState(); });
+    }
+
+    function toggleEvidenceIgnored(th, ignored) {
+      const idx = Array.from(headerRow.children).indexOf(th) - 1; // subtract hypothesis column
+      if (idx < 0) return;
+      th.classList.toggle('ignored', !!ignored);
+      const weightInput = th.querySelector('.weight-input');
+      if (weightInput) weightInput.disabled = !!ignored;
+      // Mirror style to the column cells for clarity
+      Array.from(bodyRows.children).forEach((tr) => {
+        const td = tr.children[1 + idx];
+        if (td) td.classList.toggle('ignored-cell', !!ignored);
+      });
+      recalcAll();
+      saveState();
+    }
+
+    function createEvidenceHeader(nameText) {
+      const th = document.createElement('th');
+      th.className = 'th-evidence center';
+      th.dataset.role = 'evidence';
+      th.innerHTML = `
+        <span class="label" aria-label="Evidence header">
+          <input type="text" class="evidence-name" value="${nameText}" title="Edit evidence name" />
+          <textarea class="evidence-comment" placeholder="Comment…" title="Add comment for this evidence (ignored in analysis)"></textarea>
+          <label class="weight-control" title="Weight of this evidence in sums">
+            Weight <input type="number" class="weight-input" step="0.1" min="0" value="1" />
+          </label>
+          <label class="ignore-control" title="Ignore this evidence in analysis">
+            <input type="checkbox" class="ignore-cb" /> Ignore
+          </label>
+        </span>
+        <button type="button" class="btn small remove-col" title="Remove this evidence column">–</button>
+      `;
+      const nameInput = th.querySelector('.evidence-name');
+      const commentTa = th.querySelector('.evidence-comment');
+      const weightInput = th.querySelector('.weight-input');
+      const ignoreCb = th.querySelector('.ignore-cb');
+      nameInput.addEventListener('input', saveState);
+      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
+      wireAutoGrow(commentTa);
+      weightInput.addEventListener('input', () => { recalcAll(); saveState(); });
+      ignoreCb.addEventListener('change', () => toggleEvidenceIgnored(th, ignoreCb.checked));
+      th.querySelector('.remove-col').addEventListener('click', () => {
+        const idx = Array.from(headerRow.children).indexOf(th) - 1;
+        removeEvidenceAt(idx);
+        saveState();
+      });
+      return th;
+    }
+
+    function addEvidence(data = null) {
+      const sumHeader = headerRow.querySelector('th.sum-header');
+      const headerInsertIdx = Array.from(headerRow.children).indexOf(sumHeader);
+      const th = createEvidenceHeader(data?.name ?? `E${evidenceCount() + 1}`);
+      headerRow.insertBefore(th, headerRow.children[headerInsertIdx]);
+
+      // Apply data (comment, weight, ignore) if provided
+      if (data) {
+        const c = th.querySelector('.evidence-comment');
+        const w = th.querySelector('.weight-input');
+        const ig = th.querySelector('.ignore-cb');
+        if (typeof data.comment === 'string') { c.value = data.comment; autoGrow(c); }
+        if (typeof data.weight === 'number' && !Number.isNaN(data.weight)) w.value = data.weight;
+        if (data.ignore) { ig.checked = true; toggleEvidenceIgnored(th, true); }
+      }
+
+      // Add a score cell to each existing row before the Sum cell
+      Array.from(bodyRows.children).forEach((tr, rowIdx) => {
+        const td = document.createElement('td');
+        td.className = 'center';
+        const input = createScoreInput();
+        td.appendChild(input);
+        const sumTd = tr.querySelector('.sum-cell');
+        const rowInsertIdx = Array.from(tr.children).indexOf(sumTd);
+        tr.insertBefore(td, tr.children[rowInsertIdx]);
+        // If we were given scores in data.rows after evidences added, they'll be filled when rows are created
+      });
+
+      reindexEvidenceHeaders();
+      recalcAll();
+      saveState();
+      return th;
+    }
+
+    function removeEvidenceAt(evidenceIdx) {
+      if (evidenceIdx < 0 || evidenceIdx >= evidenceCount()) return;
+      const headerEvidenceStart = 1; // after Hypothesis column
+      const th = headerRow.children[headerEvidenceStart + evidenceIdx];
+      headerRow.removeChild(th);
+      Array.from(bodyRows.children).forEach((tr) => {
+        const td = tr.children[headerEvidenceStart + evidenceIdx];
+        tr.removeChild(td);
+      });
+      reindexEvidenceHeaders();
+      recalcAll();
+    }
+
+    function createScoreInput() {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.step = '1';
+      input.className = 'number';
+      input.placeholder = '0';
+      input.addEventListener('input', () => {
+        const tr = input.closest('tr');
+        if (tr) recalcRow(tr);
+        saveState();
+      });
+      return input;
+    }
+
+    function getNextHypothesisName() { return `H${bodyRows.children.length + 1}`; }
+
+    function createHypothesisRow() {
+      const tr = document.createElement('tr');
+
+      // Hypothesis name (editable); default to H1, H2, …
+      const tdHyp = document.createElement('td');
+      const hypInput = document.createElement('input');
+      hypInput.type = 'text';
+      hypInput.placeholder = 'Hypothesis name…';
+      hypInput.value = getNextHypothesisName();
+      hypInput.addEventListener('input', saveState);
+      tdHyp.appendChild(hypInput);
+      tr.appendChild(tdHyp);
+
+      // Score cells for each evidence
+      for (let i = 0; i < evidenceCount(); i++) {
+        const td = document.createElement('td');
+        td.className = 'center';
+        td.appendChild(createScoreInput());
+        tr.appendChild(td);
+      }
+
+      // Sum cell
+      const tdSum = document.createElement('td');
+      tdSum.className = 'sum-cell';
+      tdSum.textContent = '0';
+      tr.appendChild(tdSum);
+
+      // Accept checkbox (visual cue) — only one row may be accepted
+      const tdAccept = document.createElement('td');
+      tdAccept.className = 'center';
+      const acceptCb = document.createElement('input');
+      acceptCb.type = 'checkbox';
+      acceptCb.className = 'accept-cb';
+      acceptCb.title = 'Mark as accepted (only one row can be accepted)';
+      acceptCb.addEventListener('change', () => {
+        if (acceptCb.checked) {
+          Array.from(bodyRows.children).forEach((row) => {
+            if (row === tr) return;
+            const otherAccept = row.querySelector('input.accept-cb');
+            if (otherAccept && otherAccept.checked) {
+              otherAccept.checked = false;
+              row.classList.remove('accepted');
+            }
+          });
+          const rejectCb = tr.querySelector('input.reject-cb');
+          if (rejectCb && rejectCb.checked) {
+            rejectCb.checked = false;
+            tr.classList.remove('rejected');
+          }
+          tr.classList.add('accepted');
+        } else {
+          tr.classList.remove('accepted');
+        }
+        updateHighlights();
+        saveState();
+      });
+      tdAccept.appendChild(acceptCb);
+      tr.appendChild(tdAccept);
+
+      // Reject checkbox (exclude from highlight + strike hypothesis text) — mutually exclusive with Accept
+      const tdReject = document.createElement('td');
+      tdReject.className = 'center';
+      const rejectCb = document.createElement('input');
+      rejectCb.type = 'checkbox';
+      rejectCb.className = 'reject-cb';
+      rejectCb.title = 'Exclude from lowest-score highlighting and strike the name';
+      rejectCb.addEventListener('change', () => {
+        if (rejectCb.checked) {
+          const acceptCb = tr.querySelector('input.accept-cb');
+          if (acceptCb && acceptCb.checked) {
+            acceptCb.checked = false;
+            tr.classList.remove('accepted');
+          }
+          tr.classList.add('rejected');
+        } else {
+          tr.classList.remove('rejected');
+        }
+        updateHighlights();
+        saveState();
+      });
+      tdReject.appendChild(rejectCb);
+      tr.appendChild(tdReject);
+
+      // Notes (excluded from analysis) — multiline, auto-growing
+      const tdNotes = document.createElement('td');
+      const notesTa = document.createElement('textarea');
+      notesTa.className = 'notes auto-grow';
+      notesTa.placeholder = 'Notes (ignored in sum)…';
+      tdNotes.appendChild(notesTa);
+      tr.appendChild(tdNotes);
+      wireAutoGrow(notesTa);
+
+      // Remove row button
+      const tdRemove = document.createElement('td');
+      tdRemove.className = 'center';
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn small remove';
+      removeBtn.type = 'button';
+      removeBtn.title = 'Remove this hypothesis row';
+      removeBtn.textContent = '–';
+      removeBtn.addEventListener('click', () => {
+        tr.remove();
+        recalcAll();
+        saveState();
+      });
+      tdRemove.appendChild(removeBtn);
+      tr.appendChild(tdRemove);
+
+      return tr;
+    }
+
+    function addRow(data = null) {
+      const tr = createHypothesisRow();
+      bodyRows.appendChild(tr);
+
+      if (data) {
+        const nameInput = tr.querySelector('td:first-child input[type="text"]');
+        const notesTa = tr.querySelector('textarea.notes');
+        if (typeof data.name === 'string') nameInput.value = data.name;
+        if (typeof data.notes === 'string') { notesTa.value = data.notes; autoGrow(notesTa); }
+        // Scores
+        if (Array.isArray(data.scores)) {
+          data.scores.forEach((val, i) => {
+            const td = tr.children[1 + i];
+            const input = td ? td.querySelector('input[type="number"]') : null;
+            if (input && val !== null && val !== undefined) input.value = String(val);
+          });
+        }
+        // Accept / Reject (enforce single accept later)
+        if (data.accepted) {
+          const cb = tr.querySelector('input.accept-cb'); cb.checked = true; tr.classList.add('accepted');
+        }
+        if (data.rejected) {
+          const cb = tr.querySelector('input.reject-cb'); cb.checked = true; tr.classList.add('rejected');
+        }
+      }
+
+      recalcRow(tr);
+      updateTfootColspan();
+      saveState();
+      return tr;
+    }
+
+    function parseNum(val, def = 0) { const n = parseFloat(val); return Number.isFinite(n) ? n : def; }
+
+    function recalcRow(tr) {
+      const idxSumCol = 1 + evidenceCount();
+      let sum = 0;
+      evidenceHeaders().forEach((th, evIdx) => {
+        if (th.classList.contains('ignored')) return;
+        const weight = parseNum(th.querySelector('.weight-input')?.value, 1);
+        const td = tr.children[1 + evIdx];
+        if (!td) return;
+        const input = td.querySelector('input[type="number"]');
+        if (input) sum += parseNum(input.value, 0) * weight;
+      });
+      const sumCell = tr.children[idxSumCol];
+      if (sumCell) sumCell.textContent = String(sum);
+      if (toggleHighlight.checked) updateHighlights();
+    }
+
+    function recalcAll() {
+      Array.from(bodyRows.children).forEach(recalcRow);
+      if (toggleHighlight.checked) updateHighlights();
+      updateTfootColspan();
+    }
+
+    function updateHighlights() {
+      Array.from(bodyRows.children).forEach((tr) => tr.classList.remove('lowest'));
+      if (!toggleHighlight.checked) return;
+
+      let min = Infinity;
+      const rows = Array.from(bodyRows.children);
+
+      rows.forEach((tr) => {
+        const rejectCb = tr.querySelector('input.reject-cb');
+        if (rejectCb && rejectCb.checked) return; // skip rejected rows
+        const sumCell = tr.querySelector('.sum-cell');
+        if (!sumCell) return;
+        const val = parseNum(sumCell.textContent, 0);
+        if (val < min) min = val;
+      });
+
+      if (!isFinite(min)) return;
+
+      rows.forEach((tr) => {
+        const rejectCb = tr.querySelector('input.reject-cb');
+        const sumCell = tr.querySelector('.sum-cell');
+        const val = parseNum(sumCell ? sumCell.textContent : '', 0);
+        if (rejectCb && !rejectCb.checked && val === min) tr.classList.add('lowest');
+      });
+    }
+
+    // ---- Autosave (localStorage) ----
+    function getState() {
+      const evidences = evidenceHeaders().map((th) => ({
+        name: th.querySelector('.evidence-name')?.value ?? '',
+        comment: th.querySelector('.evidence-comment')?.value ?? '',
+        weight: parseNum(th.querySelector('.weight-input')?.value, 1),
+        ignore: !!th.querySelector('.ignore-cb')?.checked,
+      }));
+      const rows = Array.from(bodyRows.children).map((tr) => {
+        const name = tr.querySelector('td:first-child input[type="text"]').value || '';
+        const notes = tr.querySelector('textarea.notes')?.value || '';
+        const accepted = !!tr.querySelector('input.accept-cb')?.checked;
+        const rejected = !!tr.querySelector('input.reject-cb')?.checked;
+        const scores = evidenceHeaders().map((th, idx) => {
+          const td = tr.children[1 + idx];
+          const input = td ? td.querySelector('input[type="number"]') : null;
+          return input && input.value !== '' ? parseNum(input.value, 0) : null;
+        });
+        return { name, notes, accepted, rejected, scores };
+      });
+      return { evidences, rows, highlight: !!toggleHighlight.checked };
+    }
+
+    function saveState() {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(getState())); } catch (e) { /* ignore quota errors */ }
+    }
+
+    function loadState() {
+      let state = null;
+      try { state = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) { state = null; }
+      if (!state) return;
+      // Build evidences first
+      if (Array.isArray(state.evidences)) {
+        state.evidences.forEach(ev => addEvidence(ev));
+      }
+      // Then rows
+      let acceptedSeen = false;
+      if (Array.isArray(state.rows)) {
+        state.rows.forEach(r => {
+          const tr = addRow(r);
+          if (r.accepted) {
+            if (!acceptedSeen) { acceptedSeen = true; }
+            else { // more than one accepted, enforce single
+              const cb = tr.querySelector('input.accept-cb');
+              if (cb) { cb.checked = false; tr.classList.remove('accepted'); }
+            }
+          }
+        });
+      }
+      if (state.highlight) { toggleHighlight.checked = true; }
+      recalcAll();
+    }
+
+    function clearMatrix() {
+      if (!confirm('Clear the entire matrix? This will remove all evidences, rows, and notes.')) return;
+      // Remove evidence headers
+      const startIdx = 1; // after Hypothesis
+      while (headerRow.children.length > startIdx + 5) { // Sum, Accept, Reject, Notes, Remove
+        headerRow.removeChild(headerRow.children[startIdx]);
+      }
+      // Remove rows
+      bodyRows.innerHTML = '';
+      toggleHighlight.checked = false;
+      recalcAll();
+      saveState();
+    }
+
+    // ---- PDF Export (jsPDF) ----
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) { alert('jsPDF failed to load.'); return; }
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const margin = 32; const pageW = doc.internal.pageSize.getWidth(); const pageH = doc.internal.pageSize.getHeight();
+      let y = margin + 10;
+
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+      doc.text('ACH Matrix (Analysis of Competing Hypotheses)', margin, y);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+      y += 16;
+      const ts = new Date().toLocaleString();
+      doc.text(`Generated: ${ts}`, margin, y); y += 6;
+      doc.text(`Highlight lowest: ${toggleHighlight.checked ? 'Yes' : 'No'} (weighted, ignored evidence excluded)`, margin, y);
+      y += 14;
+
+      // Evidence summary line (name [w=, ignored])
+      const evidences = evidenceHeaders().map((th, i) => {
+        const name = th.querySelector('.evidence-name')?.value || `E${i+1}`;
+        const w = parseNum(th.querySelector('.weight-input')?.value, 1);
+        const ig = !!th.querySelector('.ignore-cb')?.checked;
+        return `${name} [w=${w}${ig ? ', ignored' : ''}]`;
+      });
+      const evText = `Evidence: ${evidences.join('  |  ')}`;
+      const evLines = doc.splitTextToSize(evText, pageW - 2*margin);
+      evLines.forEach(line => { doc.text(line, margin, y); y += 12; if (y > pageH - margin) { doc.addPage(); y = margin; } });
+      y += 6;
+
+      // Determine column layout
+      const fixedCols = [ { key:'Hypothesis', w: 160 }, { key:'Sum', w: 70 }, { key:'Accepted', w: 60 }, { key:'Rejected', w: 60 } ];
+      const minEvW = 36;
+      const availW = pageW - 2*margin - fixedCols.reduce((a,c)=>a+c.w,0);
+      const evPerPage = Math.max(1, Math.floor(availW / minEvW));
+
+      const totalEvid = evidenceCount();
+      for (let start = 0; start < totalEvid; start += evPerPage) {
+        const end = Math.min(totalEvid, start + evPerPage);
+        const evSlice = Array.from({length: end - start}, (_,i)=> start + i);
+        const evW = Math.floor(availW / evSlice.length);
+
+        // Header row
+        doc.setFont('helvetica','bold'); doc.setFontSize(10);
+        let x = margin;
+        doc.text('Hypothesis', x, y); x += fixedCols[0].w;
+        evSlice.forEach(idx => { const name = evidenceHeaders()[idx].querySelector('.evidence-name')?.value || `E${idx+1}`; doc.text(String(name), x, y); x += evW; });
+        doc.text('Sum', x, y); x += fixedCols[1].w;
+        doc.text('Acc', x, y); x += fixedCols[2].w;
+        doc.text('Rej', x, y);
+        y += 12; doc.setFont('helvetica','normal');
+
+        // Rows
+        Array.from(bodyRows.children).forEach((tr) => {
+          if (y > pageH - margin) { doc.addPage(); y = margin + 10; }
+          let xx = margin;
+          const name = tr.querySelector('td:first-child input[type="text"]').value || '';
+          const accepted = !!tr.querySelector('input.accept-cb')?.checked;
+          const rejected = !!tr.querySelector('input.reject-cb')?.checked;
+          const sum = tr.querySelector('.sum-cell')?.textContent || '0';
+          doc.text(String(name), xx, y); xx += fixedCols[0].w;
+          evSlice.forEach(idx => {
+            const th = evidenceHeaders()[idx];
+            const ignored = th.classList.contains('ignored');
+            const td = tr.children[1 + idx];
+            const v = td?.querySelector('input[type="number"]').value || '';
+            doc.text(ignored ? '(' + v + ')' : String(v), xx, y);
+            xx += evW;
+          });
+          doc.text(String(sum), xx, y); xx += fixedCols[1].w;
+          doc.text(accepted ? '✓' : '', xx, y); xx += fixedCols[2].w;
+          doc.text(rejected ? '✗' : '', xx, y);
+          y += 12;
+        });
+        y += 8;
+      }
+
+      doc.save('ach-matrix.pdf');
+    }
+
+    // ---- Wire up top-level controls ----
+    toggleHighlight.addEventListener('change', () => { updateHighlights(); saveState(); });
+    addRowBtn.addEventListener('click', () => addRow());
+    addEvidenceBtn.addEventListener('click', () => addEvidence());
+    exportPdfBtn.addEventListener('click', async () => {
+      const ok = await ensureJsPDF();
+      if (!ok) {
+        alert('Could not load jsPDF from CDNs. Check your connection or disable content blockers and try again.');
+        return;
+      }
+      exportToPDF();
+    });
+    clearBtn.addEventListener('click', clearMatrix);
+
+    // Initialize
+    reindexEvidenceHeaders();
+    updateTfootColspan();
+    document.querySelectorAll('textarea').forEach(wireAutoGrow);
+    loadState();
+  </script>
+</body>
+</html>
