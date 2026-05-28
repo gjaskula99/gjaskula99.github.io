@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Porządek_Obrad_App</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Porządek_Obrad_App</p>
+        <label class="title-field" aria-label="Tytuł spotkania">
+          <input id="titleInput" type="text" autocomplete="off">
+        </label>
+      </div>
+      <div class="meeting-meta">
+        <label>
+          <span>Planowany start</span>
+          <input id="plannedStartInput" type="time">
+        </label>
+        <div>
+          <span>Czas lokalny</span>
+          <strong id="localClock">--:--:--</strong>
+        </div>
+      </div>
+    </header>
+    <div class="sticky-title no-print" aria-hidden="true">
+      <span id="stickyTitleText">Plan spotkania</span>
+      <strong id="stickyClock">--:--:--</strong>
+    </div>
+
+    <main class="workspace">
+      <section class="table-section" aria-labelledby="agendaHeading">
+        <div class="section-heading">
+          <div>
+            <h1 id="agendaHeading">Porządek obrad</h1>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="agendaTable">
+            <thead>
+              <tr>
+                <th>Nr</th>
+                <th>Punkt obrad</th>
+                <th>Planowany start</th>
+                <th>Czas</th>
+                <th>Faktyczny start</th>
+                <th>Faktyczne zakończenie</th>
+                <th>Opóźnienie</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="agendaBody"></tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="empty-state" hidden>
+          Brak punktów obrad.
+        </div>
+      </section>
+    </main>
+
+    <footer class="control-panel no-print" aria-label="Panel sterowania">
+      <div id="editActions" class="edit-actions panel-edit-actions no-print" hidden>
+        <button id="addRootButton" type="button">Dodaj punkt</button>
+        <button id="addChildButton" type="button">Dodaj podpunkt</button>
+        <button id="markWaitingButton" type="button">Oczekuje</button>
+        <button id="toggleStrikeButton" type="button">Wykreśl</button>
+        <button id="deleteButton" class="danger" type="button">Usuń</button>
+        <button id="clearAgendaButton" class="danger" type="button">Wyczyść agendę</button>
+        <button id="moveUpButton" type="button" title="Przesuń zaznaczony punkt w górę">↑</button>
+        <button id="moveDownButton" type="button" title="Przesuń zaznaczony punkt w dół">↓</button>
+        <button id="promoteButton" type="button">Poziom wyżej</button>
+        <button id="demoteButton" type="button">Poziom niżej</button>
+      </div>
+
+      <div class="panel-active-item">
+        <strong id="activeItemLabel">Brak</strong>
+        <span id="activeItemCountdown" class="active-countdown">Brak</span>
+      </div>
+
+      <div class="control-row">
+        <div class="control-left">
+          <div class="button-group" aria-label="Nawigacja po punktach">
+            <button id="previousButton" type="button" title="Poprzedni punkt">←</button>
+            <button id="activateButton" type="button" title="Aktywuj zaznaczony punkt">✓</button>
+            <button id="nextButton" type="button" title="Następny punkt">→</button>
+          </div>
+          <div class="compact-status">
+            <div>
+              <span>Opóźnienie</span>
+              <strong id="currentDelay">Brak</strong>
+            </div>
+            <div>
+              <span>Planowane zakończenie</span>
+              <strong id="projectedEnd">--:--</strong>
+            </div>
+          </div>
+        </div>
+
+        <div id="timerBox" class="timer-box" aria-label="Stoper">
+          <span class="timer-title">Stoper</span>
+          <label aria-label="Minuty">
+            <input id="timerMinutes" type="number" min="0" max="999" value="1" title="Minuty">
+          </label>
+          <label aria-label="Sekundy">
+            <input id="timerSeconds" type="number" min="0" max="59" value="0" title="Sekundy">
+          </label>
+          <strong id="timerDisplay">01:00</strong>
+          <button id="timerToggleButton" type="button">Start</button>
+          <button id="timerResetButton" type="button">Reset</button>
+        </div>
+
+        <div class="button-group" aria-label="Narzędzia">
+          <button id="editModeButton" type="button">Edytuj</button>
+          <button id="exportButton" type="button">Eksport JSON</button>
+          <button id="importButton" type="button">Import JSON</button>
+          <button id="printButton" type="button">PDF</button>
+          <input id="importInput" type="file" accept="application/json,.json" hidden>
+        </div>
+      </div>
+
+      <p id="messageBar" class="message-bar" role="status" aria-live="polite"></p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
