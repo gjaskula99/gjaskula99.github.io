@@ -2,7 +2,7 @@
 
 Research checked on 26 July 2026 against the Boom Beach Wiki, official Supercell support, update notes, and recent player reports where the Wiki image was stale.
 
-## Recommended first addition: Keycard Planner
+## Implemented: Keycard Planner
 
 The most reliable calculator is a Keycard acquisition and recruitment planner. Stable inputs and rules are:
 
@@ -13,7 +13,9 @@ The most reliable calculator is a Keycard acquisition and recruitment planner. S
 - Elite Recruitment guarantees a Lieutenant or Elite Lieutenant by 80 pulls; if that result is not the Elite Lieutenant, the Elite is guaranteed within the next 80 pulls.
 - Cycle of Evil provides one-time Keycards: one for each event at Threat 1 and then one for completing Stage 7 at Threats 2–30, up to 36 per event.
 
-A useful planner should accept current Keycards, Card Pieces, desired pulls, free-pull usage, Cycle of Evil progress, and a target date. It can report remaining Card Pieces, completed Daily Task days, and best/worst-case time to an Elite guarantee.
+The Keycard Planner is implemented as a separate application tab. It accepts current Keycards, Card Pieces, desired pulls, free-pull usage, Cycle of Evil progress, pity counters, manual income, and a target date. It reports remaining Card Pieces, projected pull availability, timing milestones, and outcome probabilities.
+
+The probability engine embeds Supercell's full attempt-by-attempt tables for Rare Gadgets, Sergeants, Epic Gadgets, and Lieutenants. It applies the published guarantee priority and uses deterministic state propagation instead of random simulation. Elite featured odds default to an editable 50% and support the guaranteed-next state.
 
 ## Values suitable for an optional editable shop planner
 
@@ -29,6 +31,8 @@ The Shop of Evil changed again on 22–25 June 2026. The Wiki's March offer imag
 
 The Event Shop and Sonar Shop are temporary and their inventories can rotate. They are better represented by user-editable offers than embedded constants.
 
-## Proposed architecture
+## Architecture
 
 Store shop offers as data objects separate from rendering, with fields for shop, input currency, input amount, output item, output amount, quota, reset cadence, verified date, and source. Show the verification date in the UI and allow users to override volatile prices. This avoids another obsolete calculator when Supercell changes a shop without updating its public documentation.
+
+The implemented planner therefore treats volatile offers as manual one-time or weekly Keycard income instead of embedding their prices. A future general shop comparison tool should continue using the data-object design above.

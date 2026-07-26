@@ -15,6 +15,17 @@
     button{display:block;margin:1rem auto;padding:0.6rem 1.2rem;font-size:1rem;border:none;border-radius:4px;cursor:pointer;}
     #output{margin-top:1.5rem;border-top:2px solid #333;padding-top:1.25rem;}
     #outputCycle{overflow-x:auto;}
+    #outputKeycards{overflow-x:auto;}
+    .planner-group{margin:1rem 0;}
+    .planner-group h3{margin-bottom:0.5rem;}
+    .planner-note{font-size:0.85rem;color:#555;}
+    .result-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin:1rem 0;}
+    .result-card{border:1px solid #ccc;border-radius:6px;padding:0.75rem;}
+    .result-card strong{display:block;font-size:1.25rem;margin-top:0.25rem;}
+    .result-table{width:100%;border-collapse:collapse;margin-top:0.75rem;}
+    .result-table th,.result-table td{padding:0.4rem;text-align:left;border-bottom:1px solid #ddd;white-space:nowrap;}
+    .checkbox-label{display:flex;align-items:center;gap:0.4rem;margin-top:0.75rem;}
+    .checkbox-label input{width:auto;margin:0;}
     /* --- tab bar --- */
     .tabs{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;border-bottom:2px solid #333;}
     .tab{background:none;border:none;padding:0.5rem 0.75rem;font-weight:600;cursor:pointer;border-bottom:4px solid transparent;}
@@ -34,6 +45,7 @@
   <!-- tab navigation -->
   <div class="tabs">
     <button class="tab active" data-target="cycle">Cycle of Evil Loot</button>
+    <button class="tab" data-target="keycards">Keycard Planner</button>
     <button class="tab" data-target="timers">Time Skip</button>
     <button class="tab" data-target="gunboat">Gunboat Energy</button>
     <button class="tab" data-target="future">Coming soon...</button>
@@ -64,6 +76,103 @@
     <button onclick="computeCycle()">Compute Loot</button>
 
     <div id="outputCycle"></div>
+  </section>
+
+  <section id="keycards" class="tab-content">
+    <p>Plan Keycard income, Card Piece conversions, recruitment timing, and pity-based drop probabilities.</p>
+
+    <div class="planner-group">
+      <h3>Inventory and goal</h3>
+      <div class="grid">
+        <div class="resource">
+          <label for="kpKeycards">Current Keycards</label>
+          <input type="number" id="kpKeycards" min="0" step="1" value="0">
+          <label for="kpCardPieces">Current Card Pieces</label>
+          <input type="number" id="kpCardPieces" min="0" step="1" value="0">
+        </div>
+        <div class="resource">
+          <label for="kpBanner">Recruitment banner</label>
+          <select id="kpBanner">
+            <option value="field">Field Recruitment</option>
+            <option value="elite">Elite Recruitment</option>
+          </select>
+          <label for="kpDesiredPulls">Desired pulls (0–200)</label>
+          <input type="number" id="kpDesiredPulls" min="0" max="200" step="1" value="80">
+        </div>
+        <div class="resource">
+          <label for="kpTarget">Probability target</label>
+          <select id="kpTarget">
+            <option value="rare">Rare Gadget</option>
+            <option value="sergeant">Sergeant</option>
+            <option value="epic">Epic Gadget</option>
+            <option value="lieutenant" selected>Any Lieutenant</option>
+          </select>
+          <label for="kpConfidence">Target confidence (%)</label>
+          <input type="number" id="kpConfidence" min="1" max="100" step="0.1" value="90">
+          <label for="kpTargetDate">Forecast through</label>
+          <input type="date" id="kpTargetDate">
+        </div>
+      </div>
+    </div>
+
+    <div class="planner-group">
+      <h3>Guarantee progress</h3>
+      <p class="planner-note">Enter the “attempts remaining” values shown in the selected recruitment banner.</p>
+      <div class="grid">
+        <div class="resource">
+          <label for="kpRareRemaining">Rare Gadget remaining (1–10)</label>
+          <input type="number" id="kpRareRemaining" min="1" max="10" step="1" value="10">
+          <label for="kpSergeantRemaining">Sergeant remaining (1–40)</label>
+          <input type="number" id="kpSergeantRemaining" min="1" max="40" step="1" value="40">
+        </div>
+        <div class="resource">
+          <label for="kpEpicRemaining">Epic Gadget remaining (1–55)</label>
+          <input type="number" id="kpEpicRemaining" min="1" max="55" step="1" value="55">
+          <label for="kpLieutenantRemaining">Lieutenant remaining (1–80)</label>
+          <input type="number" id="kpLieutenantRemaining" min="1" max="80" step="1" value="80">
+        </div>
+        <div class="resource" id="kpEliteOptions" hidden>
+          <label for="kpFeaturedRate">Featured Elite chance (%)</label>
+          <input type="number" id="kpFeaturedRate" min="0" max="100" step="0.1" value="50">
+          <label class="checkbox-label" for="kpEliteGuaranteed">
+            <input type="checkbox" id="kpEliteGuaranteed"> Next Lieutenant is guaranteed featured
+          </label>
+          <p class="planner-note">50% is an editable observed default; Supercell does not publish this split in its public drop table.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="planner-group">
+      <h3>Expected income</h3>
+      <div class="grid">
+        <div class="resource">
+          <label for="kpDailyTasks">Daily Task completions per week (0–7)</label>
+          <input type="number" id="kpDailyTasks" min="0" max="7" step="1" value="7">
+          <label for="kpCyclePerWeek">Keycard-awarding Cycle events per week</label>
+          <input type="number" id="kpCyclePerWeek" min="0" max="7" step="1" value="0">
+          <label for="kpCycleRemaining">Eligible Cycle rewards remaining</label>
+          <input type="number" id="kpCycleRemaining" min="0" step="1" value="0">
+        </div>
+        <div class="resource">
+          <label for="kpOneTime">Manual one-time Keycards</label>
+          <input type="number" id="kpOneTime" min="0" step="1" value="0">
+          <label for="kpWeekly">Other Keycards per week</label>
+          <input type="number" id="kpWeekly" min="0" step="0.1" value="0">
+          <p class="planner-note">Use these fields for shops, passes, purchases, and rotating events.</p>
+        </div>
+        <div class="resource" id="kpFreePullOptions">
+          <label class="checkbox-label" for="kpUseFreePulls">
+            <input type="checkbox" id="kpUseFreePulls" checked> Use free Field pulls
+          </label>
+          <label for="kpNextFreeHours">Hours until next free pull</label>
+          <input type="number" id="kpNextFreeHours" min="0" step="0.1" value="0">
+          <p class="planner-note">Free Field pulls repeat every 22 hours and do not consume Keycards.</p>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="computeKeycards()">Compute Keycard Plan</button>
+    <div id="outputKeycards"></div>
   </section>
 
   <section id="timers" class="tab-content">
@@ -160,7 +269,7 @@
     <div id="outputDummy"></div>
   </section>
 
-
+    <script src="keycard-planner.js"></script>
     <script>
       const toNonNeg = (value) => {
         const n = Number(value);
@@ -180,6 +289,184 @@
           document.getElementById(target).classList.add('active');
         });
       });
+
+      const keycardTargetLabels = {
+        rare:'Rare Gadget', sergeant:'Sergeant', epic:'Epic Gadget',
+        lieutenant:'Any Lieutenant', featured:'Featured Elite Lieutenant'
+      };
+
+      function updateKeycardBannerOptions(){
+        const elite = document.getElementById('kpBanner').value === 'elite';
+        document.getElementById('kpEliteOptions').hidden = !elite;
+        document.getElementById('kpFreePullOptions').hidden = elite;
+        document.getElementById('kpEpicRemaining').disabled = elite;
+        const target = document.getElementById('kpTarget');
+        const previous = target.value;
+        const available = elite
+          ? ['rare','sergeant','lieutenant','featured']
+          : ['rare','sergeant','epic','lieutenant'];
+        target.innerHTML = available.map(value=>
+          `<option value="${value}">${keycardTargetLabels[value]}</option>`).join('');
+        target.value = available.includes(previous) ? previous : 'lieutenant';
+        const output = document.getElementById('outputKeycards');
+        if(output) output.innerHTML = '';
+      }
+
+      document.getElementById('kpBanner').addEventListener('change', updateKeycardBannerOptions);
+      updateKeycardBannerOptions();
+      const defaultForecast = new Date();
+      defaultForecast.setDate(defaultForecast.getDate() + 28);
+      document.getElementById('kpTargetDate').value = [
+        defaultForecast.getFullYear(),
+        String(defaultForecast.getMonth() + 1).padStart(2,'0'),
+        String(defaultForecast.getDate()).padStart(2,'0')
+      ].join('-');
+
+      function inputValue(id){
+        return document.getElementById(id).value;
+      }
+
+      function probabilityConfig(){
+        return {
+          banner:inputValue('kpBanner'),
+          featuredRate:inputValue('kpFeaturedRate'),
+          eliteGuaranteed:document.getElementById('kpEliteGuaranteed').checked,
+          remaining:{
+            rare:inputValue('kpRareRemaining'),
+            sergeant:inputValue('kpSergeantRemaining'),
+            epic:inputValue('kpEpicRemaining'),
+            lieutenant:inputValue('kpLieutenantRemaining')
+          }
+        };
+      }
+
+      function incomeConfig(){
+        return {
+          banner:inputValue('kpBanner'),
+          keycards:inputValue('kpKeycards'),
+          cardPieces:inputValue('kpCardPieces'),
+          dailyTaskDaysPerWeek:inputValue('kpDailyTasks'),
+          cycleKeycardsPerWeek:inputValue('kpCyclePerWeek'),
+          cycleRewardsRemaining:inputValue('kpCycleRemaining'),
+          manualOneTimeKeycards:inputValue('kpOneTime'),
+          manualWeeklyKeycards:inputValue('kpWeekly'),
+          useFreePulls:document.getElementById('kpUseFreePulls').checked,
+          nextFreePullHours:inputValue('kpNextFreeHours')
+        };
+      }
+
+      function percent(value){
+        if(value >= 0.999999999) return '100%';
+        if(value <= 0) return '0%';
+        if(value < 0.0001) return '&lt;0.01%';
+        return `${(value * 100).toFixed(value < 0.01 ? 2 : 1)}%`;
+      }
+
+      function plannerDate(now, hours){
+        if(hours == null) return 'Not reachable with entered recurring income';
+        if(hours === 0) return 'Available now';
+        return new Date(now.getTime() + hours * 3600000).toLocaleDateString();
+      }
+
+      function metricPulls(value){
+        return value == null ? 'Not reached within 200' : value.toLocaleString();
+      }
+
+      function computeKeycards(){
+        const out = document.getElementById('outputKeycards');
+        out.innerHTML = '<p><strong>Calculating deterministic probability paths…</strong></p>';
+        requestAnimationFrame(()=>setTimeout(renderKeycardPlan, 0));
+      }
+
+      function renderKeycardPlan(){
+        const planner = window.KeycardPlanner;
+        const now = new Date();
+        const pConfig = probabilityConfig();
+        const iConfig = incomeConfig();
+        const desired = Math.min(planner.MAX_PLANNED_PULLS, Math.floor(toNonNeg(inputValue('kpDesiredPulls'))));
+        const target = inputValue('kpTarget');
+        const confidenceInput = Math.min(100, Math.max(1, Number(inputValue('kpConfidence')) || 90));
+        const confidence = confidenceInput >= 100 ? 1 - 1e-12 : confidenceInput / 100;
+        const targetDateText = inputValue('kpTargetDate');
+        const targetDate = targetDateText ? new Date(`${targetDateText}T23:59:59`) : now;
+        const horizonHours = Math.max(0, (targetDate.getTime() - now.getTime()) / 3600000);
+
+        const pieceNow = planner.convertCardPieces(iConfig.cardPieces);
+        const immediatePaid = Math.floor(toNonNeg(iConfig.keycards)) + pieceNow.keycards;
+        const projection = planner.projectIncome(iConfig, horizonHours);
+        const results = planner.simulateAll(pConfig, planner.MAX_PLANNED_PULLS);
+        const selected = results[target];
+        const desiredChance = selected.cdf[Math.min(desired, selected.cdf.length - 1)];
+        const datePulls = Math.min(planner.MAX_PLANNED_PULLS, projection.totalPulls);
+        const dateChance = selected.cdf[datePulls];
+        const confidencePulls = planner.firstThreshold(selected.cdf, confidence);
+        const desiredHours = planner.hoursToPulls(iConfig, desired);
+        const confidenceHours = confidencePulls == null ? null : planner.hoursToPulls(iConfig, confidencePulls);
+        const missingNow = Math.max(0, desired - immediatePaid);
+
+        const probabilityRows = Object.entries(results).map(([name,result])=>`
+          <tr>
+            <td>${keycardTargetLabels[name]}</td>
+            <td>${percent(result.cdf[Math.min(desired, result.cdf.length - 1)])}</td>
+            <td>${metricPulls(result.median)}</td>
+            <td>${metricPulls(result.p90)}</td>
+            <td>${metricPulls(result.p95)}</td>
+          </tr>`).join('');
+
+        const milestoneSet = new Set([1,10,20,40,55,80,120,160,200,desired]);
+        if(confidencePulls != null) milestoneSet.add(confidencePulls);
+        const milestoneRows = [...milestoneSet].filter(value=>value >= 0 && value <= 200)
+          .sort((a,b)=>a-b).map(pulls=>
+            `<tr><td>${pulls}</td><td>${percent(selected.cdf[pulls])}</td></tr>`).join('');
+        const maxDiscarded = Math.max(...Object.values(results).map(result=>result.discardedProbability));
+        const numericalNote = maxDiscarded > 0.00001
+          ? `<p class="planner-note">Numerical pruning discarded at most ${percent(maxDiscarded)} probability mass.</p>` : '';
+
+        document.getElementById('outputKeycards').innerHTML = `
+          <h2>Keycard Plan</h2>
+          <div class="result-cards">
+            <div class="result-card">Paid pulls available now<strong>${immediatePaid}</strong>${pieceNow.remainder} Card Pieces remain</div>
+            <div class="result-card">Still needed for ${desired} pulls<strong>${missingNow}</strong>paid pull${missingNow === 1 ? '' : 's'}</div>
+            <div class="result-card">Projected pulls by ${targetDate.toLocaleDateString()}<strong>${projection.totalPulls}</strong>${projection.paidPulls} paid + ${projection.freePulls} free</div>
+            <div class="result-card">Chance of ${keycardTargetLabels[target]} by forecast date<strong>${percent(dateChance)}</strong>${datePulls} modeled pulls</div>
+          </div>
+
+          <h3>Timing</h3>
+          <table class="result-table">
+            <tbody>
+              <tr><th>${desired} total pulls</th><td>${plannerDate(now, desiredHours)}</td></tr>
+              <tr><th>${confidenceInput}% chance of ${keycardTargetLabels[target]}</th><td>${confidencePulls == null ? 'Not reached within 200 pulls' : `${confidencePulls} pulls — ${plannerDate(now, confidenceHours)}`}</td></tr>
+              <tr><th>Expected pulls for target</th><td>${selected.expectedPulls == null ? 'Not available' : selected.expectedPulls.toFixed(1)}</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Forecast income through ${targetDate.toLocaleDateString()}</h3>
+          <table class="result-table">
+            <tbody>
+              <tr><th>Card Pieces earned from Daily Tasks</th><td>${projection.earnedCardPieces.toLocaleString()}</td></tr>
+              <tr><th>Keycards converted from all Card Pieces</th><td>${projection.cardPieceKeycards.toLocaleString()} (${projection.cardPiecesRemaining} pieces remain)</td></tr>
+              <tr><th>Cycle of Evil Keycards</th><td>${projection.cycleKeycards.toLocaleString()}</td></tr>
+              <tr><th>Manual one-time Keycards</th><td>${projection.manualOneTimeKeycards.toLocaleString()}</td></tr>
+              <tr><th>Average manual weekly Keycards</th><td>${projection.manualWeeklyKeycards.toFixed(1)}</td></tr>
+              <tr><th>Free Field pulls</th><td>${projection.freePulls.toLocaleString()}</td></tr>
+            </tbody>
+          </table>
+          <p class="planner-note">Weekly income is averaged across days, so forecast dates are estimates. Cycle income stops at the entered eligibility limit.</p>
+
+          <h3>Probability within ${desired} pulls</h3>
+          <table class="result-table">
+            <thead><tr><th>Outcome</th><th>Chance</th><th>Median</th><th>90%</th><th>95%</th></tr></thead>
+            <tbody>${probabilityRows}</tbody>
+          </table>
+
+          <h3>${keycardTargetLabels[target]} cumulative chance</h3>
+          <table class="result-table">
+            <thead><tr><th>Pulls</th><th>Chance of at least one</th></tr></thead>
+            <tbody>${milestoneRows}</tbody>
+          </table>
+          ${numericalNote}
+          <p class="planner-note">Drop rates verified ${planner.VERIFIED_DATE} against <a href="https://ingame.support.supercell.com/boom-beach/en/articles/drop-chances.html" target="_blank" rel="noopener">Supercell's official tables</a>. Featured Elite rate is an editable observed assumption.</p>`;
+      }
 
       /* Cycle of Evil: sum total EC & Proto Tokens over 7 stages starting from threat */
       function computeCycle(){

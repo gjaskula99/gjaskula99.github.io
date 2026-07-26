@@ -5,6 +5,7 @@ A dependency-free, single-page collection of Boom Beach calculators. Game data w
 ## Calculators
 
 - Cycle of Evil per-stage and total base resources, Evil Coins, and Proto Tokens for Dr. T, Hammerman Strikes Back, and Imitation Game, including a Resource Reward bonus; guaranteed currency totals for War Factory
+- Keycard acquisition and Recruitment planner with Card Piece conversion, income timing, official pity/drop probabilities, and editable Elite featured odds
 - Diamond and Time Saver estimates for skipping a timer (the Diamond formula is an estimate)
 - Gunboat Energy usage for permanent Gunboat abilities and Gunboat levels 1–28
 
@@ -30,6 +31,14 @@ Setup requirements:
 
 The deployed URL is expected to be `https://gjaskula99.github.io/BoomBeachCalculators/`.
 
-## Planned shop calculators
+## Keycard Planner
 
-See `SHOP_CALCULATORS.md` for the current Black Market and Keycard calculator feasibility assessment. A Card Piece/Keycard planner can be built from stable conversion data; rotating Shop of Evil and Event Shop planners require a maintainable offer dataset because prices and quotas have already changed during 2026.
+The separate Keycard Planner tab accepts current Keycards, Card Pieces, banner-specific pity counters, a pull goal, and expected income. It reports available and forecast pulls, estimated acquisition dates, and cumulative chances for Recruitment outcomes.
+
+Probability calculations use Supercell's attempt-specific rates and guarantee priority. They are deterministic rather than simulated. The featured Elite Lieutenant split defaults to an editable 50% because that split is visible in-game but absent from Supercell's public drop-rate article.
+
+Stable sources—Daily Tasks, Cycle of Evil, Card Piece conversion, and free Field pulls—have dedicated inputs. Rotating shops, passes, purchases, and special events use manual one-time or weekly Keycard inputs so changing offers do not make the calculator stale. See `SHOP_CALCULATORS.md` for the underlying research and assumptions.
+
+Run the automated planner tests with:
+
+`node tests/keycard-planner.test.js`
