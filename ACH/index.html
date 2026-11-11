@@ -33,20 +33,25 @@
 
     main, body { width: 100%; }
 
-    .table-shell { margin-top: 12px; width: 100%; overflow-x: auto; }
+    .table-shell { margin-top: 12px; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-shell:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
     header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-    header h1 { font-size: 1.35rem; margin: 0; letter-spacing: 0.2px; }
+    header h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 1.35rem; margin: 0; letter-spacing: 0.2px; }
     .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .toggle { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
     .toggle input[type="checkbox"] { transform: translateY(1px); width: 18px; height: 18px; cursor: pointer; }
 
     .hint { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
 
-    table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; table-layout: fixed; min-width: max(960px, var(--table-min, 0px)); }
+    table { width: max(100%, var(--table-min, 760px)); border-collapse: separate; border-spacing: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; table-layout: fixed; }
     thead th { position: sticky; top: 0; background: #131721; z-index: 1; }
-    th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; vertical-align: middle; font-size: 0.95rem; }
+    th, td { box-sizing: border-box; border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; vertical-align: middle; font-size: 0.95rem; }
     thead th { font-weight: 600; color: #cfd6e6; white-space: nowrap; }
+    thead th.hypothesis-header { width: 200px; }
+    thead th.th-evidence { width: 240px; white-space: normal; }
+    thead th.sum-header, thead th.accept-header, thead th.reject-header, thead th.remove-header { width: 80px; }
+    thead th.notes-header { width: 220px; }
     tbody tr:last-child td { border-bottom: none; }
     tfoot td { border-top: 1px solid var(--border); background: #121621; }
 
@@ -54,14 +59,14 @@
     .center { text-align: center; }
     .number { width: 70px; }
 
-    input[type="text"], input[type="number"], textarea {
+    input[type="text"], input[type="number"], textarea, select {
       width: 100%; box-sizing: border-box; background: #0e121a; color: var(--text); border: 1px solid #2a3140; border-radius: 8px; padding: 6px 8px; outline: none;
     }
     textarea { line-height: 1.35; resize: vertical; min-height: 60px; }
 
     input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
-    input:focus, textarea:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(148, 226, 255, 0.15); }
+    input:focus, textarea:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(148, 226, 255, 0.15); }
 
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: #0f1420; color: var(--text); cursor: pointer; font-size: 0.9rem; user-select: none; }
     .btn.small { padding: 4px 8px; font-size: 0.85rem; }
@@ -82,22 +87,50 @@
     .rejected td:first-child input[type="text"] { text-decoration: line-through; }
 
     .th-evidence { position: relative; }
-    .th-evidence .label { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .th-evidence .remove-col { margin-left: 8px; }
-    .th-evidence .evidence-name { width: 150px; max-width: 100%; text-align: center; padding: 4px 6px; }
-    .th-evidence .evidence-comment { width: 210px; max-width: 100%; text-align: left; padding: 6px 8px; font-size: 0.9rem; }
+    .th-evidence .label { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; min-width: 0; }
+    .th-evidence .remove-col { margin-top: 6px; }
+    .th-evidence .evidence-name { text-align: center; padding: 4px 6px; }
+    .th-evidence .evidence-comment { text-align: left; padding: 6px 8px; font-size: 0.9rem; }
     .th-evidence .ignore-control, .th-evidence .weight-control { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
     .th-evidence .weight-input { width: 72px; text-align: center; }
+    .th-evidence .admiralty-control { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #384054; border-radius: 8px; padding: 5px 7px 7px; margin: 4px 0 0; }
+    .th-evidence .admiralty-control legend { padding: 0 4px; font-size: 0.8rem; color: var(--muted); }
+    .th-evidence .admiralty-selects { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; min-width: 0; }
+    .th-evidence .admiralty-selects label { display: block; min-width: 0; text-align: left; font-size: 0.75rem; color: var(--muted); }
+    .th-evidence .admiralty-selects select { display: block; width: 100%; min-width: 0; max-width: 100%; margin-top: 3px; font-size: 0.8rem; text-overflow: ellipsis; }
+    .th-evidence .admiralty-result { display: block; margin-top: 5px; font-size: 0.8rem; color: var(--text); }
+    table.compact-evidence thead th.th-evidence { width: 160px; }
+    .compact-evidence .th-evidence .evidence-comment,
+    .compact-evidence .th-evidence .admiralty-selects,
+    .compact-evidence .th-evidence .admiralty-control legend,
+    .compact-evidence .th-evidence .ignore-control,
+    .compact-evidence .th-evidence .remove-col { display: none; }
+    .compact-evidence .th-evidence .admiralty-control { border: 0; padding: 0; margin: 0; }
+    .compact-evidence .th-evidence .admiralty-result { margin: 0; font-weight: 600; }
+    .compact-evidence .th-evidence .weight-control { justify-content: center; margin-top: 0; }
+    .th-evidence.admiralty-green { background: #153a2b; }
+    .th-evidence.admiralty-yellow { background: #463d16; }
+    .th-evidence.admiralty-red { background: #4a2025; }
+    td.admiralty-green { background: rgba(47, 191, 113, 0.12); }
+    td.admiralty-yellow { background: rgba(255, 220, 40, 0.12); }
+    td.admiralty-red { background: rgba(230, 57, 70, 0.12); }
 
     /* Visual treatment for ignored evidence */
-    .th-evidence.ignored { opacity: 0.75; background: rgba(255,255,255,0.02); }
+    .th-evidence.ignored { opacity: 0.75; }
+    .th-evidence.ignored:not(.admiralty-green):not(.admiralty-yellow):not(.admiralty-red) { background: rgba(255,255,255,0.02); }
     .th-evidence.ignored .evidence-name { text-decoration: line-through; }
     .ignored-cell { opacity: 0.55; }
 
-    .tfoot-controls { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .tfoot-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; }
+    .tfoot-controls > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; }
     .muted { color: var(--muted); }
 
-    @media (max-width: 720px) { thead .optional-label { display: none; } .number { width: 60px; } .th-evidence .evidence-name { width: 120px; } .th-evidence .evidence-comment { width: 160px; } }
+    @media (max-width: 720px) {
+      .wrap { padding: 0 10px; }
+      .controls { width: 100%; }
+      .controls .toggle { flex: 1 1 170px; justify-content: center; }
+      .table-shell { margin-left: -10px; width: calc(100% + 20px); }
+    }
   </style>
   <!-- jsPDF is loaded dynamically when exporting (fallback across CDNs) -->
 </head>
@@ -110,24 +143,32 @@
           <input id="toggleHighlight" type="checkbox" />
           <span>Highlight lowest score</span>
         </label>
+        <label class="toggle" title="Color evidence columns by their Admiralty code">
+          <input id="toggleAdmiraltyColors" type="checkbox" />
+          <span>Color by Admiralty code</span>
+        </label>
+        <label class="toggle" title="Show only each evidence name, weight, and Admiralty code">
+          <input id="toggleCompactEvidence" type="checkbox" />
+          <span>Compact evidence</span>
+        </label>
         <button id="exportPdfBtn" class="btn" title="Export to PDF">Export PDF</button>
         <button id="clearBtn" class="btn" title="Clear the entire matrix">Clear</button>
       </div>
     </header>
 
-    <div class="hint">Use <em>+ Evidence</em> to add columns and <em>+ Hypothesis</em> to add rows. “Accept” marks a single row in green; “Reject” excludes a row from highlighting and strikes the name. Evidence headers support comments, <em>weights</em>, and an <em>Ignore</em> toggle to exclude from sums.</div>
+    <div class="hint">Use <em>+ Evidence</em> to add columns and <em>+ Hypothesis</em> to add rows. “Accept” marks a single row in green; “Reject” excludes a row from highlighting and strikes the name. Each evidence has an Admiralty source rating (A–F) and information rating (1–6). Turn on <em>Color by Admiralty code</em> to shade its column green (credible), yellow (uncertain), or red (not credible). <em>Compact evidence</em> shows only each name, weight, and code; turn it off to edit the other controls. Evidence headers also support comments and an <em>Ignore</em> toggle to exclude from sums.</div>
 
-    <div class="table-shell">
+    <div class="table-shell" role="region" aria-label="ACH matrix, scroll horizontally for more columns" tabindex="0">
       <table id="achTable" aria-describedby="matrix of hypotheses and evidences">
         <thead>
           <tr id="headerRow">
-            <th class="center">Hypothesis</th>
+            <th class="center hypothesis-header">Hypothesis</th>
             <!-- Evidence headers will be injected here -->
             <th class="sum-cell center sum-header" title="Weighted sum of scores across non-ignored evidences">Sum</th>
-            <th class="center" title="Mark this hypothesis as accepted">Accept</th>
-            <th class="center" title="Exclude this hypothesis when finding the lowest score">Reject</th>
-            <th class="center">Notes</th>
-            <th class="center" title="Remove row">Remove</th>
+            <th class="center accept-header" title="Mark this hypothesis as accepted">Accept</th>
+            <th class="center reject-header" title="Exclude this hypothesis when finding the lowest score">Reject</th>
+            <th class="center notes-header">Notes</th>
+            <th class="center remove-header" title="Remove row">Remove</th>
           </tr>
         </thead>
         <tbody id="bodyRows"></tbody>
@@ -147,7 +188,7 @@
       </table>
     </div>
 
-    <p class="hint">Scoring: enter integer scores (e.g., -2, -1, 0, 1, 2). Empty cells count as 0. Weighted sums use each evidence's weight (default 1.0) and ignore evidence marked as “Ignore”.</p>
+    <p class="hint">Scoring: enter integer scores (e.g., -2, -1, 0, 1, 2). Empty cells count as 0. Weighted sums use each evidence's weight (default 1.0) and ignore evidence marked as “Ignore”. On narrow screens, scroll the table horizontally to see more columns.</p>
   </div>
 
   <script>
@@ -191,6 +232,8 @@
     const headerRow = document.getElementById('headerRow');
     const bodyRows = document.getElementById('bodyRows');
     const toggleHighlight = document.getElementById('toggleHighlight');
+    const toggleAdmiraltyColors = document.getElementById('toggleAdmiraltyColors');
+    const toggleCompactEvidence = document.getElementById('toggleCompactEvidence');
     const addRowBtn = document.getElementById('addRowBtn');
     const addEvidenceBtn = document.getElementById('addEvidenceBtn');
     const tfootCell = document.getElementById('tfootCell');
@@ -200,6 +243,47 @@
 
     function evidenceHeaders() { return Array.from(headerRow.querySelectorAll('th.th-evidence')); }
     function evidenceCount() { return evidenceHeaders().length; }
+
+    // Rows are source reliability A–F; columns are information credibility 1–6.
+    const ADMIRALTY_COLORS = {
+      A: ['green', 'green', 'green', 'yellow', 'yellow', 'yellow'],
+      B: ['green', 'green', 'green', 'yellow', 'yellow', 'yellow'],
+      C: ['green', 'green', 'yellow', 'yellow', 'red', 'red'],
+      D: ['green', 'green', 'yellow', 'red', 'red', 'red'],
+      E: ['green', 'yellow', 'red', 'red', 'red', 'red'],
+      F: ['yellow', 'yellow', 'yellow', 'red', 'red', 'red']
+    };
+    const ADMIRALTY_LABELS = { green: 'Credible', yellow: 'Uncertain', red: 'Not credible' };
+    const ADMIRALTY_CLASSES = ['admiralty-green', 'admiralty-yellow', 'admiralty-red'];
+
+    function admiraltyRating(th) {
+      const source = th.querySelector('.admiralty-source').value;
+      const information = th.querySelector('.admiralty-information').value;
+      const color = ADMIRALTY_COLORS[source]?.[Number(information) - 1] || null;
+      return { code: color ? source + information : '', color };
+    }
+
+    function updateAdmiraltyColors() {
+      evidenceHeaders().forEach((th, idx) => {
+        const { code, color } = admiraltyRating(th);
+        th.querySelector('.admiralty-result').textContent = code ? `${code} · ${ADMIRALTY_LABELS[color]}` : (toggleCompactEvidence.checked ? 'Code not set' : 'Select both values');
+        const activeClass = toggleAdmiraltyColors.checked && color ? `admiralty-${color}` : null;
+        th.classList.remove(...ADMIRALTY_CLASSES);
+        if (activeClass) th.classList.add(activeClass);
+        Array.from(bodyRows.children).forEach((tr) => {
+          const td = tr.children[1 + idx];
+          if (!td) return;
+          td.classList.remove(...ADMIRALTY_CLASSES);
+          if (activeClass) td.classList.add(activeClass);
+        });
+      });
+    }
+
+    function updateCompactEvidence() {
+      achTable.classList.toggle('compact-evidence', toggleCompactEvidence.checked);
+      updateTableMinWidth();
+      updateAdmiraltyColors();
+    }
 
     function updateTfootColspan() {
       const totalCols = headerRow.children.length;
@@ -213,17 +297,10 @@
     }
 
     function updateTableMinWidth() {
-      // Approximate intrinsic width based on column counts so horizontal scroll appears when needed.
-      // Tunable constants (px):
-      const HYP = 240;      // Hypothesis name column
-      const EVID = 110;     // Each evidence score column
-      const SUM = 70;       // Sum column
-      const ACCEPT = 60;    // Accept checkbox
-      const REJECT = 60;    // Reject checkbox
-      const NOTES = 240;    // Notes textarea
-      const REMOVE = 60;    // Remove button
-      const PADDING = 40;   // Extra breathing room for borders/padding
-      const computed = HYP + (EVID * evidenceCount()) + SUM + ACCEPT + REJECT + NOTES + REMOVE + PADDING;
+      // Match the header widths above; a wider matrix scrolls inside .table-shell.
+      const FIXED_COLUMNS = 200 + 80 + 80 + 80 + 220 + 80;
+      const EVIDENCE_COLUMN = toggleCompactEvidence.checked ? 160 : 240;
+      const computed = FIXED_COLUMNS + EVIDENCE_COLUMN * evidenceCount();
       if (achTable && Number.isFinite(computed)) {
         achTable.style.setProperty('--table-min', computed + 'px');
       }
@@ -260,22 +337,54 @@
       th.className = 'th-evidence center';
       th.dataset.role = 'evidence';
       th.innerHTML = `
-        <span class="label" aria-label="Evidence header">
-          <input type="text" class="evidence-name" value="${nameText}" title="Edit evidence name" />
+        <div class="label" aria-label="Evidence header">
+          <input type="text" class="evidence-name" title="Edit evidence name" />
           <textarea class="evidence-comment" placeholder="Comment…" title="Add comment for this evidence (ignored in analysis)"></textarea>
+          <fieldset class="admiralty-control">
+            <legend>Admiralty code</legend>
+            <div class="admiralty-selects">
+              <label>Source
+                <select class="admiralty-source" title="Source reliability">
+                  <option value="">—</option>
+                  <option value="A">A · Reliable</option>
+                  <option value="B">B · Usually reliable</option>
+                  <option value="C">C · Fairly reliable</option>
+                  <option value="D">D · Not usually reliable</option>
+                  <option value="E">E · Unreliable</option>
+                  <option value="F">F · Cannot be judged</option>
+                </select>
+              </label>
+              <label>Information
+                <select class="admiralty-information" title="Information credibility">
+                  <option value="">—</option>
+                  <option value="1">1 · Independently confirmed</option>
+                  <option value="2">2 · Very probably true</option>
+                  <option value="3">3 · Possibly true</option>
+                  <option value="4">4 · Doubtful</option>
+                  <option value="5">5 · Improbable</option>
+                  <option value="6">6 · Cannot be judged</option>
+                </select>
+              </label>
+            </div>
+            <output class="admiralty-result">Select both values</output>
+          </fieldset>
           <label class="weight-control" title="Weight of this evidence in sums">
             Weight <input type="number" class="weight-input" step="0.1" min="0" value="1" />
           </label>
           <label class="ignore-control" title="Ignore this evidence in analysis">
             <input type="checkbox" class="ignore-cb" /> Ignore
           </label>
-        </span>
+        </div>
         <button type="button" class="btn small remove-col" title="Remove this evidence column">–</button>
       `;
       const nameInput = th.querySelector('.evidence-name');
+      nameInput.value = nameText;
       const commentTa = th.querySelector('.evidence-comment');
       const weightInput = th.querySelector('.weight-input');
       const ignoreCb = th.querySelector('.ignore-cb');
+      th.querySelectorAll('.admiralty-source, .admiralty-information').forEach(select => {
+        select.addEventListener('change', () => { updateAdmiraltyColors(); saveState(); });
+      });
       nameInput.addEventListener('input', saveState);
       nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
       wireAutoGrow(commentTa);
@@ -295,14 +404,16 @@
       const th = createEvidenceHeader(data?.name ?? `E${evidenceCount() + 1}`);
       headerRow.insertBefore(th, headerRow.children[headerInsertIdx]);
 
-      // Apply data (comment, weight, ignore) if provided
+      // Apply data (comment, Admiralty code, weight, ignore) if provided
       if (data) {
         const c = th.querySelector('.evidence-comment');
         const w = th.querySelector('.weight-input');
         const ig = th.querySelector('.ignore-cb');
         if (typeof data.comment === 'string') { c.value = data.comment; autoGrow(c); }
+        if (ADMIRALTY_COLORS[data.admiraltySource]) th.querySelector('.admiralty-source').value = data.admiraltySource;
+        if (/^[1-6]$/.test(String(data.admiraltyInformation))) th.querySelector('.admiralty-information').value = String(data.admiraltyInformation);
         if (typeof data.weight === 'number' && !Number.isNaN(data.weight)) w.value = data.weight;
-        if (data.ignore) { ig.checked = true; toggleEvidenceIgnored(th, true); }
+        if (data.ignore) ig.checked = true;
       }
 
       // Add a score cell to each existing row before the Sum cell
@@ -317,7 +428,10 @@
         // If we were given scores in data.rows after evidences added, they'll be filled when rows are created
       });
 
+      if (data?.ignore) toggleEvidenceIgnored(th, true);
+
       reindexEvidenceHeaders();
+      updateAdmiraltyColors();
       recalcAll();
       saveState();
       return th;
@@ -333,6 +447,7 @@
         tr.removeChild(td);
       });
       reindexEvidenceHeaders();
+      updateAdmiraltyColors();
       recalcAll();
     }
 
@@ -490,6 +605,7 @@
       }
 
       recalcRow(tr);
+      updateAdmiraltyColors();
       updateTfootColspan();
       saveState();
       return tr;
@@ -550,6 +666,8 @@
       const evidences = evidenceHeaders().map((th) => ({
         name: th.querySelector('.evidence-name')?.value ?? '',
         comment: th.querySelector('.evidence-comment')?.value ?? '',
+        admiraltySource: th.querySelector('.admiralty-source')?.value ?? '',
+        admiraltyInformation: th.querySelector('.admiralty-information')?.value ?? '',
         weight: parseNum(th.querySelector('.weight-input')?.value, 1),
         ignore: !!th.querySelector('.ignore-cb')?.checked,
       }));
@@ -565,7 +683,7 @@
         });
         return { name, notes, accepted, rejected, scores };
       });
-      return { evidences, rows, highlight: !!toggleHighlight.checked };
+      return { evidences, rows, highlight: !!toggleHighlight.checked, colorAdmiralty: !!toggleAdmiraltyColors.checked, compactEvidence: !!toggleCompactEvidence.checked };
     }
 
     function saveState() {
@@ -595,11 +713,15 @@
         });
       }
       if (state.highlight) { toggleHighlight.checked = true; }
+      toggleAdmiraltyColors.checked = !!state.colorAdmiralty;
+      toggleCompactEvidence.checked = !!state.compactEvidence;
+      updateCompactEvidence();
       recalcAll();
+      saveState();
     }
 
     function clearMatrix() {
-      if (!confirm('Clear the entire matrix? This will remove all evidences, rows, and notes.')) return;
+      if (!confirm('Clear the entire matrix? This will remove all evidences, Admiralty ratings, rows, and notes.')) return;
       // Remove evidence headers
       const startIdx = 1; // after Hypothesis
       while (headerRow.children.length > startIdx + 5) { // Sum, Accept, Reject, Notes, Remove
@@ -608,6 +730,9 @@
       // Remove rows
       bodyRows.innerHTML = '';
       toggleHighlight.checked = false;
+      toggleAdmiraltyColors.checked = false;
+      toggleCompactEvidence.checked = false;
+      updateCompactEvidence();
       recalcAll();
       saveState();
     }
@@ -617,82 +742,143 @@
       const { jsPDF } = window.jspdf || {};
       if (!jsPDF) { alert('jsPDF failed to load.'); return; }
       const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-      const margin = 32; const pageW = doc.internal.pageSize.getWidth(); const pageH = doc.internal.pageSize.getHeight();
-      let y = margin + 10;
+      const margin = 32;
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const contentW = pageW - 2 * margin;
+      const compact = toggleCompactEvidence.checked;
+      const fills = {
+        green: [218, 243, 226],
+        yellow: [255, 247, 207],
+        red: [252, 224, 226]
+      };
+      const evidences = evidenceHeaders().map((th, index) => {
+        const rating = admiraltyRating(th);
+        return {
+          name: th.querySelector('.evidence-name')?.value || `E${index + 1}`,
+          comment: th.querySelector('.evidence-comment')?.value.trim() || '',
+          weight: parseNum(th.querySelector('.weight-input')?.value, 1),
+          ignored: !!th.querySelector('.ignore-cb')?.checked,
+          ...rating
+        };
+      });
+      let y = margin;
+
+      function nextPageIfNeeded(height) {
+        if (y + height > pageH - margin) { doc.addPage(); y = margin; }
+      }
+
+      function fitText(value, width) {
+        const full = String(value ?? '').replace(/\s+/g, ' ').trim();
+        if (doc.getTextWidth(full) <= width) return full;
+        let short = full;
+        while (short && doc.getTextWidth(short + '...') > width) short = short.slice(0, -1);
+        return short ? short + '...' : '';
+      }
+
+      function fillEvidenceCell(item, x, top, width, height) {
+        if (!toggleAdmiraltyColors.checked || !item.color) return;
+        doc.setFillColor(...fills[item.color]);
+        doc.rect(x, top, width - 1, height - 1, 'F');
+      }
 
       doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
-      doc.text('ACH Matrix (Analysis of Competing Hypotheses)', margin, y);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-      y += 16;
-      const ts = new Date().toLocaleString();
-      doc.text(`Generated: ${ts}`, margin, y); y += 6;
-      doc.text(`Highlight lowest: ${toggleHighlight.checked ? 'Yes' : 'No'} (weighted, ignored evidence excluded)`, margin, y);
-      y += 14;
+      doc.text('ACH Matrix (Analysis of Competing Hypotheses)', margin, y + 14);
+      y += 28;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+      const metadata = [
+        `Generated: ${new Date().toLocaleString()}`,
+        `Evidence view: ${compact ? 'Compact' : 'Expanded'}  |  Admiralty colors: ${toggleAdmiraltyColors.checked ? 'On' : 'Off'}`,
+        `Highlight lowest: ${toggleHighlight.checked ? 'Yes' : 'No'} (weighted, ignored evidence excluded)`
+      ];
+      if (toggleAdmiraltyColors.checked) metadata.push('Admiralty colors: green = credible, yellow = uncertain, red = not credible');
+      metadata.forEach(line => { nextPageIfNeeded(13); doc.text(line, margin, y + 9); y += 13; });
+      y += 7;
 
-      // Evidence summary line (name [w=, ignored])
-      const evidences = evidenceHeaders().map((th, i) => {
-        const name = th.querySelector('.evidence-name')?.value || `E${i+1}`;
-        const w = parseNum(th.querySelector('.weight-input')?.value, 1);
-        const ig = !!th.querySelector('.ignore-cb')?.checked;
-        return `${name} [w=${w}${ig ? ', ignored' : ''}]`;
+      // Keep complete names and ratings here when table headers need shortening.
+      const summary = evidences.length ? evidences.map(item => {
+        const details = [item.code || 'code unset'];
+        if (!compact && item.color) details.push(ADMIRALTY_LABELS[item.color].toLowerCase());
+        details.push(`w=${item.weight}`);
+        if (item.ignored) details.push('ignored');
+        const comment = !compact && item.comment ? `; comment: ${item.comment.replace(/\s+/g, ' ')}` : '';
+        return `${item.name} [${details.join(', ')}]${comment}`;
+      }).join('  |  ') : 'None';
+      doc.splitTextToSize(`Evidence: ${summary}`, contentW).forEach(line => {
+        nextPageIfNeeded(12);
+        doc.text(line, margin, y + 9);
+        y += 12;
       });
-      const evText = `Evidence: ${evidences.join('  |  ')}`;
-      const evLines = doc.splitTextToSize(evText, pageW - 2*margin);
-      evLines.forEach(line => { doc.text(line, margin, y); y += 12; if (y > pageH - margin) { doc.addPage(); y = margin; } });
-      y += 6;
+      y += 12;
 
-      // Determine column layout
-      const fixedCols = [ { key:'Hypothesis', w: 160 }, { key:'Sum', w: 70 }, { key:'Accepted', w: 60 }, { key:'Rejected', w: 60 } ];
-      const minEvW = 36;
-      const availW = pageW - 2*margin - fixedCols.reduce((a,c)=>a+c.w,0);
-      const evPerPage = Math.max(1, Math.floor(availW / minEvW));
-
-      const totalEvid = evidenceCount();
-      for (let start = 0; start < totalEvid; start += evPerPage) {
-        const end = Math.min(totalEvid, start + evPerPage);
-        const evSlice = Array.from({length: end - start}, (_,i)=> start + i);
-        const evW = Math.floor(availW / evSlice.length);
-
-        // Header row
-        doc.setFont('helvetica','bold'); doc.setFontSize(10);
-        let x = margin;
-        doc.text('Hypothesis', x, y); x += fixedCols[0].w;
-        evSlice.forEach(idx => { const name = evidenceHeaders()[idx].querySelector('.evidence-name')?.value || `E${idx+1}`; doc.text(String(name), x, y); x += evW; });
-        doc.text('Sum', x, y); x += fixedCols[1].w;
-        doc.text('Acc', x, y); x += fixedCols[2].w;
-        doc.text('Rej', x, y);
-        y += 12; doc.setFont('helvetica','normal');
-
-        // Rows
-        Array.from(bodyRows.children).forEach((tr) => {
-          if (y > pageH - margin) { doc.addPage(); y = margin + 10; }
-          let xx = margin;
-          const name = tr.querySelector('td:first-child input[type="text"]').value || '';
-          const accepted = !!tr.querySelector('input.accept-cb')?.checked;
-          const rejected = !!tr.querySelector('input.reject-cb')?.checked;
-          const sum = tr.querySelector('.sum-cell')?.textContent || '0';
-          doc.text(String(name), xx, y); xx += fixedCols[0].w;
-          evSlice.forEach(idx => {
-            const th = evidenceHeaders()[idx];
-            const ignored = th.classList.contains('ignored');
-            const td = tr.children[1 + idx];
-            const v = td?.querySelector('input[type="number"]').value || '';
-            doc.text(ignored ? '(' + v + ')' : String(v), xx, y);
-            xx += evW;
-          });
-          doc.text(String(sum), xx, y); xx += fixedCols[1].w;
-          doc.text(accepted ? '✓' : '', xx, y); xx += fixedCols[2].w;
-          doc.text(rejected ? '✗' : '', xx, y);
-          y += 12;
-        });
-        y += 8;
+      const widths = { hypothesis: 170, sum: 65, accept: 55, reject: 55 };
+      const evidenceSpace = contentW - Object.values(widths).reduce((total, width) => total + width, 0);
+      const perPage = Math.max(1, Math.floor(evidenceSpace / (compact ? 82 : 108)));
+      const slices = [];
+      for (let start = 0; start < evidences.length; start += perPage) {
+        slices.push(Array.from({ length: Math.min(perPage, evidences.length - start) }, (_, offset) => start + offset));
       }
+      if (!slices.length) slices.push([]);
+
+      slices.forEach((slice, sliceIndex) => {
+        if (sliceIndex > 0) { doc.addPage(); y = margin; }
+        const evW = slice.length ? evidenceSpace / slice.length : 0;
+        const headerH = compact ? 52 : 64;
+        const rowH = 20;
+
+        function drawHeader() {
+          nextPageIfNeeded(headerH + (bodyRows.children.length ? rowH : 0));
+          const top = y;
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+          doc.text('Hypothesis', margin + 4, top + 14);
+          let x = margin + widths.hypothesis;
+          slice.forEach(index => {
+            const item = evidences[index];
+            fillEvidenceCell(item, x, top, evW, headerH);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+            doc.text(fitText(item.name, evW - 8), x + 4, top + 13);
+            doc.setFont('helvetica', 'normal');
+            doc.text(item.code || 'Code not set', x + 4, top + 26);
+            if (!compact) doc.text(item.color ? ADMIRALTY_LABELS[item.color] : '', x + 4, top + 39);
+            doc.text(fitText(`w=${item.weight}${item.ignored ? ' (ignored)' : ''}`, evW - 8), x + 4, top + (compact ? 39 : 52));
+            x += evW;
+          });
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+          doc.text('Sum', x + 4, top + 14); x += widths.sum;
+          doc.text('Acc', x + 4, top + 14); x += widths.accept;
+          doc.text('Rej', x + 4, top + 14);
+          doc.setDrawColor(190, 195, 205);
+          doc.line(margin, top + headerH, pageW - margin, top + headerH);
+          y += headerH;
+        }
+
+        drawHeader();
+        Array.from(bodyRows.children).forEach(tr => {
+          if (y + rowH > pageH - margin) { doc.addPage(); y = margin; drawHeader(); }
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          doc.text(fitText(tr.querySelector('td:first-child input[type="text"]').value || '', widths.hypothesis - 8), margin + 4, y + 14);
+          let x = margin + widths.hypothesis;
+          slice.forEach(index => {
+            const item = evidences[index];
+            fillEvidenceCell(item, x, y, evW, rowH);
+            const value = tr.children[1 + index]?.querySelector('input[type="number"]')?.value || '';
+            doc.text(fitText(item.ignored ? `(${value})` : value, evW - 8), x + 4, y + 14);
+            x += evW;
+          });
+          doc.text(fitText(tr.querySelector('.sum-cell')?.textContent || '0', widths.sum - 8), x + 4, y + 14); x += widths.sum;
+          doc.text(tr.querySelector('input.accept-cb')?.checked ? 'Yes' : '', x + 4, y + 14); x += widths.accept;
+          doc.text(tr.querySelector('input.reject-cb')?.checked ? 'Yes' : '', x + 4, y + 14);
+          y += rowH;
+        });
+      });
 
       doc.save('ach-matrix.pdf');
     }
 
     // ---- Wire up top-level controls ----
     toggleHighlight.addEventListener('change', () => { updateHighlights(); saveState(); });
+    toggleAdmiraltyColors.addEventListener('change', () => { updateAdmiraltyColors(); saveState(); });
+    toggleCompactEvidence.addEventListener('change', () => { updateCompactEvidence(); saveState(); });
     addRowBtn.addEventListener('click', () => addRow());
     addEvidenceBtn.addEventListener('click', () => addEvidence());
     exportPdfBtn.addEventListener('click', async () => {
